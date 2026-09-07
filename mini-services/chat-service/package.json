@@ -5,14 +5,14 @@
     "dev": "bun --hot index.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.3",
+    "@prisma/client": "^7.10.0",
     "@socket.io/redis-adapter": "^8.3.0",
-    "ioredis": "^5.4.1",
+    "ioredis": "^6.0.0",
     "jose": "^6.2.3",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "prisma": "^6.19.3"
+    "prisma": "^7.10.0"
   },
   "overrides": {
     "deepmerge-ts": "^8.0.2",
