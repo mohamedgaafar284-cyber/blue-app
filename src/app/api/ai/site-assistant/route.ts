@@ -29,16 +29,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
-    const { audioTranscript, action, projectName, language: _language } = validation.data;
+    const { audioTranscript, action, projectName, language } = validation.data;
+    const isEn = language === 'en';
 
     let systemPrompt = '';
     if (action === 'format_inspection') {
-      systemPrompt = `أنت مهندس استشاري خبير في الإشراف على مشاريع البناء والفلل في دولة الإمارات العربية المتحدة.
-مهمتك: استلام الملاحظات الصوتية الميدانية غير المرتبة من مهندس الموقع وتحويلها فوراً إلى "تقرير فحص واستلام هندسي رسمي (Technical Site Inspection Report)" دقيق ومنسق بصيغة JSON.
+      systemPrompt = isEn 
+        ? `You are an expert senior supervising consultant engineer for UAE construction projects.
+Your task: Convert messy, spoken voice notes from site engineers into a crisp, professional "Technical Site Inspection Report" in JSON format in ENGLISH.
+Current Project: ${projectName || 'Engineering Project'}
+
+Extract and structure the following fields:
+1. title: concise official inspection title (e.g., "Inspection of First Floor Slab Reinforcement & Formwork").
+2. findings: technical breakdown of observed site conditions.
+3. notes: general consultant observations.
+4. recommendations: concrete actions required prior to approval.
+5. defects: array of defects identified, each with title, severity (LOW, NORMAL, HIGH, CRITICAL), location, and recommendation.
+
+Output strict JSON only:
+{
+  "title": "...",
+  "findings": "...",
+  "notes": "...",
+  "recommendations": "...",
+  "defects": [
+    { "title": "...", "severity": "NORMAL", "location": "...", "recommendation": "..." }
+  ]
+}`
+        : `أنت مهندس استشاري خبير في الإشراف على مشاريع البناء والفلل في دولة الإمارات العربية المتحدة.
+مهمتك: استلام الملاحظات الصوتية الميدانية غير المرتبة من مهندس الموقع وتحويلها فوراً إلى "تقرير فحص واستلام هندسي رسمي (Technical Site Inspection Report)" دقيق ومنسق بصيغة JSON باللغة العربية.
 
 المشروع الحالي: ${projectName || 'مشروع هندسي'}
 
-يجب أن تقوم باستخراج وتنظيم الحقول التالية باللغة العربية:
+يجب أن تقوم باستخراج وتنظيم الحقول التالية:
 1. title: عنوان موجز ورسمي للزيارة (مثال: "فحص أعمال حدادة ونجارة سقف الدور الأول").
 2. findings: صياغة فنية مهنية لما تم رصده، تشمل الإيجابيات والملاحظات الإنشائية/المعمارية بدقة.
 3. notes: تعليمات أو ملاحظات عامة للاستشاري والمقاول.
