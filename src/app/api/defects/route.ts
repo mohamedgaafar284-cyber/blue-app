@@ -115,18 +115,24 @@ export async function POST(request: NextRequest) {
     const _body = sanitizeObject(validation.data);
     const validatedData = sanitizeObject(validation.data);
 
-    const { projectId, title, description: _description, severity, status, assigneeId, location, photos, notes } = validatedData;
+    const { projectId, title, description, severity, status, assigneeId, location, photos, notes } = validatedData;
+
+    // Combine description and notes into resolutionNotes so site explanations are fully preserved
+    const combinedNotesParts: string[] = [];
+    if (description) combinedNotesParts.push(`[الوصف والمعالجة]: ${description}`);
+    if (notes) combinedNotesParts.push(notes);
+    const resolvedNotes = combinedNotesParts.join('\n\n');
 
     const defect = await db.defect.create({
       data: {
         projectId,
         title,
-        severity: severity,
+        severity: (severity || "normal").toLowerCase(),
         location: location || "",
         assigneeId: assigneeId || null,
         photos: photos || "",
-        resolutionNotes: notes || "",
-        status: (status || "OPEN"),
+        resolutionNotes: resolvedNotes,
+        status: (status || "open").toLowerCase(),
         ...orgCreate(ctx),
         createdById: ctx.userId,
       },

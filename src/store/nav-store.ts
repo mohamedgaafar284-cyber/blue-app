@@ -58,6 +58,7 @@ const PAGE_ROUTE_MAP: Record<string, string> = {
   budgets: "/dashboard/budgets",
   contracts: "/dashboard/contracts",
   documents: "/dashboard/documents",
+  "field-portal": "/dashboard/field-portal",
   "site-visits": "/dashboard/site-visits",
   "site-diary": "/dashboard/site-diary",
   rfi: "/dashboard/rfi",
