@@ -105,7 +105,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error, errors: validation.errors }, { status: 400 });
     }
 
-    const { projectId, date, plotNumber, municipality, gateDescription, neighborDesc, buildingDesc, status, photos, notes } = validation.data;
+    const { projectId, date, plotNumber, municipality, gateDescription, neighborDesc, buildingDesc, status, photos, notes, purpose, findings, visitors } = validation.data;
+
+    // Compose rich notes if purpose or findings are provided (e.g. from Field Portal & AI)
+    const richNotesParts: string[] = [];
+    if (purpose) richNotesParts.push(`[موضوع الزيارة]: ${purpose}`);
+    if (findings) richNotesParts.push(`[نتائج المعاينة]:\n${findings}`);
+    if (notes) richNotesParts.push(notes);
+    const combinedNotes = richNotesParts.join('\n\n');
 
     const siteVisit = await db.siteVisit.create({
       data: {
@@ -113,12 +120,12 @@ export async function POST(request: NextRequest) {
         date: new Date(date),
         plotNumber: plotNumber || "",
         municipality: (municipality || ""),
-        gateDescription: gateDescription || "",
+        gateDescription: gateDescription || (visitors ? `الزوار: ${visitors}` : ""),
         neighborDesc: neighborDesc || "",
-        buildingDesc: buildingDesc || "",
+        buildingDesc: buildingDesc || (purpose ? `الغرض: ${purpose}` : ""),
         status: (status || "DRAFT"),
         photos: photos || "",
-        notes: notes || "",
+        notes: combinedNotes,
         ...orgCreate(ctx),
         createdById: ctx.userId,
       },

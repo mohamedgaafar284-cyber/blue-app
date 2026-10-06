@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Camera, Mic, MicOff, Sparkles, CheckCircle2, AlertTriangle, 
-  ArrowRight, Send,
+  ArrowRight, Send, MapPin,
   Building, ShieldAlert, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,12 +29,26 @@ interface ProjectBasic {
   location?: string;
 }
 
+interface ExtractedDefect {
+  title: string;
+  severity: "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
+  location: string;
+  recommendation: string;
+}
+
 export default function FieldPortalPage({ language }: FieldPortalProps) {
   const isAr = language === "ar";
   const queryClient = useQueryClient();
 
   // Active view: "hub" | "new_visit" | "new_defect"
   const [activeView, setActiveView] = useState<"hub" | "new_visit" | "new_defect">("hub");
+
+  // GPS Coordinates state
+  const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  // Extracted defects from AI
+  const [aiDefects, setAiDefects] = useState<ExtractedDefect[]>([]);
 
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -149,6 +163,29 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
     }
   };
 
+  // GPS Location Trigger
+  const handleGetGpsLocation = () => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      toast.error(isAr ? "خاصية تحديد الموقع الجغرافي غير مدعومة في جهازك" : "Geolocation is not supported by your device");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setIsLocating(false);
+        toast.success(isAr ? `تم تحديد إحداثيات الموقع بدقة: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}` : `GPS captured: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`);
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+        setIsLocating(false);
+        toast.error(isAr ? "تعذر تحديد الموقع الجغرافي (تأكد من إذن الموقع)" : "Could not retrieve GPS coordinates");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
+
   // 4. AI Voice Report Generator
   const handleProcessWithAi = async () => {
     if (!speechTranscript) {
@@ -177,14 +214,17 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
 
       const json = await res.json();
       if (json.data) {
-        const { title, findings, notes, recommendations } = json.data;
+        const { title, findings, notes, recommendations, defects } = json.data;
         if (title) setVisitPurpose(title);
         if (findings) setVisitFindings(findings);
         if (notes || recommendations) {
           setVisitNotes([notes, recommendations ? `\nالتوصيات: ${recommendations}` : ""].filter(Boolean).join("\n"));
         }
+        if (Array.isArray(defects) && defects.length > 0) {
+          setAiDefects(defects);
+        }
 
-        toast.success(isAr ? "تمت صياغة التقرير الهندسي بالذكاء الاصطناعي بنجاح!" : "AI formulated inspection report successfully!");
+        toast.success(isAr ? "تمت صياغة التقرير الهندسي واستخراج الملاحظات بالذكاء الاصطناعي بنجاح!" : "AI formulated inspection report & extracted defects successfully!");
       }
     } catch (err) {
       console.error(err);
@@ -217,7 +257,9 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
   // 6. Submit Site Visit Mutation
   const createVisitMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedProjectId) throw new Error(isAr ? "اختر المشروع" : "Select project");
+      const gpsInfo = gpsLocation ? `\n[إحداثيات الموقع GPS]: ${gpsLocation.lat.toFixed(6)}, ${gpsLocation.lng.toFixed(6)}` : "";
+      const finalNotes = visitNotes + gpsInfo;
+
       const res = await fetch("/api/site-visits", {
         method: "POST",
         headers: getMutationHeaders(),
@@ -226,8 +268,9 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
           date: new Date(visitDate).toISOString(),
           purpose: visitPurpose || (isAr ? "معاينة موقع روتينية" : "Routine inspection"),
           findings: visitFindings,
-          notes: visitNotes,
-          status: "COMPLETED",
+          notes: finalNotes,
+          buildingDesc: gpsLocation ? `GPS: ${gpsLocation.lat.toFixed(5)}, ${gpsLocation.lng.toFixed(5)}` : "",
+          status: "submitted",
           photos: photoUrls.join("||"),
         }),
       });
@@ -452,7 +495,11 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
                     </div>
                   </div>
                   <Badge variant="outline" className="text-[10px]">
-                    {visit.municipality || (isAr ? "معتمد" : "Approved")}
+                    {visit.status === "approved" || visit.status === "COMPLETED" 
+                      ? (isAr ? "معتمد" : "Approved")
+                      : visit.status === "submitted"
+                      ? (isAr ? "مُرسل للمراجعة" : "Submitted")
+                      : (isAr ? "مسودة" : "Draft")}
                   </Badge>
                 </div>
               ))}
@@ -548,6 +595,75 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
                 className="text-xs mt-1"
               />
             </div>
+
+            {/* GPS Location Capture Section */}
+            <div className="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin className={cn("w-4 h-4", gpsLocation ? "text-emerald-500" : "text-slate-400")} />
+                <div>
+                  <span className="text-[11px] font-semibold block text-slate-700 dark:text-slate-300">
+                    {isAr ? "إثبات موقع المهندس (GPS):" : "Engineer Site Verification (GPS):"}
+                  </span>
+                  <span className="text-[10px] text-slate-500">
+                    {gpsLocation 
+                      ? `${gpsLocation.lat.toFixed(5)}, ${gpsLocation.lng.toFixed(5)} ✓`
+                      : (isAr ? "لم يتم التحديد" : "Not captured")}
+                  </span>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleGetGpsLocation}
+                disabled={isLocating}
+                className="h-7 text-[11px] px-2.5 rounded-lg gap-1"
+              >
+                <MapPin className="w-3 h-3 text-emerald-600" />
+                {isLocating 
+                  ? (isAr ? "جارٍ التحديد..." : "Locating...") 
+                  : (isAr ? "تحديد موقعي" : "Capture GPS")}
+              </Button>
+            </div>
+
+            {/* AI Extracted Defects Card (if any found) */}
+            {aiDefects.length > 0 && (
+              <div className="p-3 bg-rose-500/5 dark:bg-rose-950/20 rounded-2xl border border-rose-500/20 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    {isAr ? `عيوب استخرجها الذكاء الاصطناعي (${aiDefects.length}):` : `AI Extracted Defects (${aiDefects.length}):`}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
+                    {isAr ? "تحويل للمقاول" : "Send to Snag"}
+                  </Badge>
+                </div>
+                <div className="space-y-1.5">
+                  {aiDefects.map((def, idx) => (
+                    <div key={idx} className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-rose-200/80 dark:border-rose-900/60 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{def.title}</div>
+                        <div className="text-[10px] text-slate-500">{def.location} • {def.recommendation}</div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setDefectTitle(def.title);
+                          setDefectLocation(def.location);
+                          setDefectDesc(def.recommendation);
+                          setDefectSeverity(def.severity);
+                          setActiveView("new_defect");
+                        }}
+                        className="h-6 text-[10px] text-rose-600 hover:text-rose-700 px-2 font-bold"
+                      >
+                        {isAr ? "تسجيل كعيب ←" : "Log Defect →"}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Photos & Camera Action */}
             <div>
