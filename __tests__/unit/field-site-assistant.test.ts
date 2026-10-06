@@ -1,15 +1,48 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { SignJWT } from 'jose';
 import { NextRequest } from 'next/server';
 import { POST as siteAssistantPOST } from '@/app/api/ai/site-assistant/route';
+import { getJwtSecretBytes } from '@/lib/auth/jwt-secret';
+import { db } from '@/lib/db';
 
-function makeRequest(
+process.env.JWT_SECRET = 'test-secret-at-least-32-characters-long!';
+
+const spyDbUserFindUnique = jest.spyOn(db.user, 'findUnique');
+
+async function generateTestToken(payload: Record<string, unknown>): Promise<string> {
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuer('blueprint-saas')
+    .setAudience('blueprint-users')
+    .setExpirationTime('15m')
+    .setIssuedAt()
+    .sign(getJwtSecretBytes());
+}
+
+async function makeAuthenticatedRequest(
   path: string,
-  options: { method?: string; body?: unknown; headers?: Record<string, string> } = {}
-): NextRequest {
+  options: { method?: string; body?: unknown; role?: string } = {}
+): Promise<NextRequest> {
+  const role = options.role || 'ADMIN';
+  const token = await generateTestToken({
+    userId: 'test-user-1',
+    email: 'engineer@blueprint.ae',
+    role,
+    type: 'access',
+    organizationId: 'org-test',
+  });
+
   const url = `http://localhost:3000${path}`;
   const init: ConstructorParameters<typeof NextRequest>[1] = {
-    method: options.method || 'GET',
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    method: options.method || 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'authorization': `Bearer ${token}`,
+      'x-user-id': 'test-user-1',
+      'x-user-email': 'engineer@blueprint.ae',
+      'x-user-role': role,
+      'x-organization-id': 'org-test',
+    },
   };
   if (options.body !== undefined) {
     init.body = JSON.stringify(options.body);
@@ -18,9 +51,13 @@ function makeRequest(
 }
 
 describe('Field Portal & AI Site Assistant Unit Tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    spyDbUserFindUnique.mockResolvedValue(null as any);
+  });
+
   it('should validate missing transcript and reject with 400', async () => {
-    const request = makeRequest('/api/ai/site-assistant', {
-      method: 'POST',
+    const request = await makeAuthenticatedRequest('/api/ai/site-assistant', {
       body: { action: 'format_inspection' },
     });
 
@@ -31,8 +68,7 @@ describe('Field Portal & AI Site Assistant Unit Tests', () => {
   });
 
   it('should process speech transcript using fallback parser in Arabic', async () => {
-    const request = makeRequest('/api/ai/site-assistant', {
-      method: 'POST',
+    const request = await makeAuthenticatedRequest('/api/ai/site-assistant', {
       body: {
         audioTranscript: 'تم صب أعمدة الدور الأول وفحص كانات حديد التسليح وبها تعشيش عميق',
         action: 'format_inspection',
@@ -54,8 +90,7 @@ describe('Field Portal & AI Site Assistant Unit Tests', () => {
   });
 
   it('should process speech transcript using fallback parser in English', async () => {
-    const request = makeRequest('/api/ai/site-assistant', {
-      method: 'POST',
+    const request = await makeAuthenticatedRequest('/api/ai/site-assistant', {
       body: {
         audioTranscript: 'Inspection of ground floor slab completed with major crack observed near column C2',
         action: 'format_inspection',
