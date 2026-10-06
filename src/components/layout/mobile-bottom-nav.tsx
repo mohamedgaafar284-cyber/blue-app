@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, FolderKanban, List,
-  Sparkles, Settings, HardHat,
+  Sparkles, HardHat,
   CreditCard, FileText, Users, Shield,
   BarChart2, MapPin, Send, BookOpen,
   Calendar, BellRing, Activity, Search,

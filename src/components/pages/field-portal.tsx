@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Camera, Mic, MicOff, Sparkles, CheckCircle2, AlertTriangle, 
-  MapPin, Plus, ArrowRight, RefreshCw, Send, Image as ImageIcon,
-  Building, ShieldAlert, FileText, ChevronRight
+  ArrowRight, Send,
+  Building, ShieldAlert, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getMutationHeaders } from "@/lib/csrf-client";
@@ -40,14 +39,14 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
   const [speechTranscript, setSpeechTranscript] = useState("");
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<unknown>(null);
 
   // AI Formatting loading
   const [isAiProcessing, setIsAiProcessing] = useState(false);
 
   // Form states
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [visitDate, setVisitDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [visitDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
   const [visitPurpose, setVisitPurpose] = useState("");
   const [visitFindings, setVisitFindings] = useState("");
   const [visitNotes, setVisitNotes] = useState("");
@@ -81,7 +80,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
   }, [projects, selectedProjectId]);
 
   // 2. Fetch Recent Site Visits
-  const { data: recentVisits = [], isLoading: isLoadingVisits } = useQuery({
+  const { data: recentVisits = [] } = useQuery<Array<{ id: string; date: string; status: string; municipality?: string; project?: { name?: string } }>>({
     queryKey: ["recent-field-visits"],
     queryFn: async () => {
       const res = await fetch("/api/site-visits?limit=5");
@@ -94,26 +93,35 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
   // 3. Speech Recognition Setup (Web Speech API)
   const toggleRecording = () => {
     if (isRecording) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      if (recognitionRef.current && typeof (recognitionRef.current as { stop?: () => void }).stop === "function") {
+        (recognitionRef.current as { stop: () => void }).stop();
       }
       setIsRecording(false);
       return;
     }
 
-    const windowSpeech = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const windowSpeech = (window as unknown as { SpeechRecognition?: new () => unknown; webkitSpeechRecognition?: new () => unknown }).SpeechRecognition || 
+                         (window as unknown as { SpeechRecognition?: new () => unknown; webkitSpeechRecognition?: new () => unknown }).webkitSpeechRecognition;
     if (!windowSpeech) {
       toast.error(isAr ? "المتصفح لا يدعم التسجيل الصوتي المباشر. يمكنك كتابة الملاحظات." : "Browser does not support direct voice recognition.");
       return;
     }
 
     try {
-      const recognition = new windowSpeech();
+      const recognition = new windowSpeech() as {
+        lang: string;
+        continuous: boolean;
+        interimResults: boolean;
+        onresult: (e: { results: Array<Array<{ transcript: string }>> }) => void;
+        onerror: (e: { error: string }) => void;
+        onend: () => void;
+        start: () => void;
+      };
       recognition.lang = isAr ? "ar-AE" : "en-US";
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event) => {
         let currentText = "";
         for (let i = 0; i < event.results.length; i++) {
           currentText += event.results[i][0].transcript + " ";
@@ -121,7 +129,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
         setSpeechTranscript(currentText.trim());
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
         setIsRecording(false);
       };
@@ -169,7 +177,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
 
       const json = await res.json();
       if (json.data) {
-        const { title, findings, notes, recommendations, defects } = json.data;
+        const { title, findings, notes, recommendations } = json.data;
         if (title) setVisitPurpose(title);
         if (findings) setVisitFindings(findings);
         if (notes || recommendations) {
@@ -178,7 +186,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
 
         toast.success(isAr ? "تمت صياغة التقرير الهندسي بالذكاء الاصطناعي بنجاح!" : "AI formulated inspection report successfully!");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       toast.error(isAr ? "تعذر المعالجة بالذكاء الاصطناعي، تم الاحتفاظ بنصك" : "AI processing failed, text retained");
       setVisitFindings(speechTranscript);
@@ -240,7 +248,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
       setSpeechTranscript("");
       setActiveView("hub");
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to submit");
     },
   });
@@ -278,7 +286,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
       setPhotoUrls([]);
       setActiveView("hub");
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to submit defect");
     },
   });
@@ -425,7 +433,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
             </div>
 
             <div className="space-y-2">
-              {recentVisits.map((visit: any) => (
+              {recentVisits.map((visit) => (
                 <div 
                   key={visit.id} 
                   className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between"
@@ -615,7 +623,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">{isAr ? "درجة الخطورة:" : "Severity:"}</Label>
-                <Select value={defectSeverity} onValueChange={(val: any) => setDefectSeverity(val)}>
+                <Select value={defectSeverity} onValueChange={(val: "LOW" | "NORMAL" | "HIGH" | "CRITICAL") => setDefectSeverity(val)}>
                   <SelectTrigger className="text-xs mt-1">
                     <SelectValue />
                   </SelectTrigger>

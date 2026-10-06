@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
-    const { audioTranscript, action, projectName, language } = validation.data;
+    const { audioTranscript, action, projectName, language: _language } = validation.data;
 
     let systemPrompt = '';
     if (action === 'format_inspection') {
