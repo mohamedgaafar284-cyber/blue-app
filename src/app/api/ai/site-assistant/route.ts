@@ -145,7 +145,20 @@ Output strict JSON only:
       const isCritical = /هبوط|شروخ|تشققات|صدأ|تعشيش عميق|ميلان|crack|settlement/i.test(audioTranscript);
       const isHigh = /تأخير|توقف|غياب|رفض|reject|stop/i.test(audioTranscript);
 
-      const parsedData = {
+      const parsedData = isEn ? {
+        title: `Site Inspection Report - ${new Date().toLocaleDateString('en-US')}`,
+        findings: `Site inspection conducted. Findings: ${audioTranscript}`,
+        notes: 'Contractor must adhere to approved specifications and consultant instructions on site.',
+        recommendations: 'Re-inspect after rectification prior to proceeding with subsequent works.',
+        defects: isCritical || isHigh ? [
+          {
+            title: isCritical ? 'Critical defect requiring structural review' : 'Site execution observation',
+            severity: isCritical ? 'CRITICAL' : 'HIGH',
+            location: 'Elements under execution',
+            recommendation: 'Hold casting/works on this section until rectification and consultant sign-off.',
+          }
+        ] : [],
+      } : {
         title: `تقرير معاينة موقع - ${new Date().toLocaleDateString('ar-AE')}`,
         findings: `تمت المعاينة الميدانية ورصد ما يلي: ${audioTranscript}`,
         notes: 'يرجى من المقاول الالتزام بالمواصفات القياسية وتعليمات الاستشاري بموقع العمل.',

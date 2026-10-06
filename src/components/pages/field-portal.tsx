@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { getMutationHeaders } from "@/lib/csrf-client";
 import { cn } from "@/lib/utils";
+import { queueOfflineAction, isOfflineClient } from "@/lib/offline-sync";
 
 interface FieldPortalProps {
   language: "ar" | "en";
@@ -218,7 +219,8 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
         if (title) setVisitPurpose(title);
         if (findings) setVisitFindings(findings);
         if (notes || recommendations) {
-          setVisitNotes([notes, recommendations ? `\nالتوصيات: ${recommendations}` : ""].filter(Boolean).join("\n"));
+          const recPrefix = isAr ? "\nالتوصيات: " : "\nRecommendations: ";
+          setVisitNotes([notes, recommendations ? `${recPrefix}${recommendations}` : ""].filter(Boolean).join("\n"));
         }
         if (Array.isArray(defects) && defects.length > 0) {
           setAiDefects(defects);
@@ -236,53 +238,96 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
   };
 
   // 5. Native Camera capture handler
-  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // Convert to preview base64 or upload
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setPhotoUrls((prev) => [...prev, event.target!.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    const fileList = Array.from(files);
+    toast.info(isAr ? `جارٍ رفع ${fileList.length} صورة...` : `Uploading ${fileList.length} photos...`);
 
-    toast.success(isAr ? `تم التقاط ${files.length} صورة بنجاح` : `Captured ${files.length} photos`);
+    for (const file of fileList) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("name", `SitePhoto_${Date.now()}_${file.name}`);
+        formData.append("category", "site-photos");
+        if (selectedProjectId) formData.append("projectId", selectedProjectId);
+
+        const res = await fetch("/api/documents", {
+          method: "POST",
+          headers: getMutationHeaders(),
+          body: formData,
+        });
+
+        if (res.ok) {
+          const doc = await res.json();
+          const docUrl = doc.data?.filePath || doc.filePath || `/api/documents/${doc.id || doc.data?.id}/download`;
+          setPhotoUrls((prev) => [...prev, docUrl]);
+        } else {
+          // Fallback to local data URL preview if upload endpoint is unavailable
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            if (ev.target?.result) {
+              setPhotoUrls((prev) => [...prev, ev.target!.result as string]);
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      } catch (err) {
+        console.error("Photo upload error:", err);
+      }
+    }
+
+    toast.success(isAr ? `تمت معالجة ${fileList.length} صورة بنجاح` : `Processed ${fileList.length} photos`);
   };
 
   // 6. Submit Site Visit Mutation
   const createVisitMutation = useMutation({
     mutationFn: async () => {
       if (!selectedProjectId) throw new Error(isAr ? "اختر المشروع" : "Select project");
-      const gpsInfo = gpsLocation ? `\n[إحداثيات الموقع GPS]: ${gpsLocation.lat.toFixed(6)}, ${gpsLocation.lng.toFixed(6)}` : "";
+      const gpsInfo = gpsLocation 
+        ? (isAr ? `\n[إحداثيات الموقع GPS]: ${gpsLocation.lat.toFixed(6)}, ${gpsLocation.lng.toFixed(6)}` : `\n[GPS Coordinates]: ${gpsLocation.lat.toFixed(6)}, ${gpsLocation.lng.toFixed(6)}`)
+        : "";
       const finalNotes = visitNotes + gpsInfo;
 
-      const res = await fetch("/api/site-visits", {
-        method: "POST",
-        headers: getMutationHeaders(),
-        body: JSON.stringify({
-          projectId: selectedProjectId,
-          date: new Date(visitDate).toISOString(),
-          purpose: visitPurpose || (isAr ? "معاينة موقع روتينية" : "Routine inspection"),
-          findings: visitFindings,
-          notes: finalNotes,
-          buildingDesc: gpsLocation ? `GPS: ${gpsLocation.lat.toFixed(5)}, ${gpsLocation.lng.toFixed(5)}` : "",
-          status: "submitted",
-          photos: photoUrls.join("||"),
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to save visit");
+      const visitPayload = {
+        projectId: selectedProjectId,
+        date: new Date(visitDate).toISOString(),
+        purpose: visitPurpose || (isAr ? "معاينة موقع روتينية" : "Routine inspection"),
+        findings: visitFindings,
+        notes: finalNotes,
+        status: "SUBMITTED",
+        photos: photoUrls.join("||"),
+      };
+
+      if (isOfflineClient()) {
+        queueOfflineAction("create-site-visit", visitPayload);
+        return { offline: true };
       }
-      return res.json();
+
+      try {
+        const res = await fetch("/api/site-visits", {
+          method: "POST",
+          headers: getMutationHeaders(),
+          body: JSON.stringify(visitPayload),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Failed to save visit");
+        }
+        return res.json();
+      } catch (_err: unknown) {
+        // If network request failed while in the field, queue offline
+        queueOfflineAction("create-site-visit", visitPayload);
+        return { offline: true };
+      }
     },
-    onSuccess: () => {
-      toast.success(isAr ? "تم حفظ تقرير الزيارة بنجاح وإرساله للمكتب!" : "Visit saved and transmitted to office!");
+    onSuccess: (data) => {
+      if (data && 'offline' in data && data.offline) {
+        toast.info(isAr ? "تم حفظ التقرير في وضع عدم الاتصال (Offline) وسيتم رفعه تلقائياً فور توفر الإنترنت!" : "Visit saved offline. Will auto-sync when online!");
+      } else {
+        toast.success(isAr ? "تم حفظ تقرير الزيارة بنجاح وإرساله للمكتب!" : "Visit saved and transmitted to office!");
+      }
       queryClient.invalidateQueries({ queryKey: ["recent-field-visits"] });
       // Reset form
       setVisitPurpose("");
@@ -303,27 +348,43 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
       if (!selectedProjectId) throw new Error(isAr ? "اختر المشروع" : "Select project");
       if (!defectTitle) throw new Error(isAr ? "اكتب عنوان الملاحظة" : "Enter defect title");
 
-      const res = await fetch("/api/defects", {
-        method: "POST",
-        headers: getMutationHeaders(),
-        body: JSON.stringify({
-          projectId: selectedProjectId,
-          title: defectTitle,
-          severity: defectSeverity,
-          location: defectLocation,
-          description: defectDesc,
-          photos: photoUrls.join("||"),
-          status: "OPEN",
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to report defect");
+      const defectPayload = {
+        projectId: selectedProjectId,
+        title: defectTitle,
+        severity: defectSeverity,
+        location: defectLocation,
+        description: defectDesc,
+        photos: photoUrls.join("||"),
+        status: "OPEN",
+      };
+
+      if (isOfflineClient()) {
+        queueOfflineAction("create-defect", defectPayload);
+        return { offline: true };
       }
-      return res.json();
+
+      try {
+        const res = await fetch("/api/defects", {
+          method: "POST",
+          headers: getMutationHeaders(),
+          body: JSON.stringify(defectPayload),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Failed to report defect");
+        }
+        return res.json();
+      } catch (_err: unknown) {
+        queueOfflineAction("create-defect", defectPayload);
+        return { offline: true };
+      }
     },
-    onSuccess: () => {
-      toast.success(isAr ? "تم تسجيل الملاحظة وتوجيهها للمقاول!" : "Defect logged and assigned to contractor!");
+    onSuccess: (data) => {
+      if (data && 'offline' in data && data.offline) {
+        toast.info(isAr ? "تم تسجيل الملاحظة في وضع عدم الاتصال (Offline) وسيتم إرسالها تلقائياً!" : "Defect saved offline. Will auto-sync when online!");
+      } else {
+        toast.success(isAr ? "تم تسجيل الملاحظة وتوجيهها للمقاول!" : "Defect logged and assigned to contractor!");
+      }
       setDefectTitle("");
       setDefectDesc("");
       setDefectLocation("");

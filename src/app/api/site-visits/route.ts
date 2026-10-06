@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
 
     const where: Record<string, unknown> = { deletedAt: null, ...orgFilter(ctx) };
     if (projectId) where.projectId = projectId;
-    if (status) where.status = status;
+    if (status) {
+      where.status = { in: [status.toUpperCase(), status.toLowerCase()] };
+    }
     if (municipality) where.municipality = municipality;
 
     const usePagination = isPaginationRequested(searchParams);
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
         gateDescription: gateDescription || (visitors ? `الزوار: ${visitors}` : ""),
         neighborDesc: neighborDesc || "",
         buildingDesc: buildingDesc || (purpose ? `الغرض: ${purpose}` : ""),
-        status: (status || "DRAFT"),
+        status: (status || "DRAFT").toUpperCase(),
         photos: photos || "",
         notes: combinedNotes,
         ...orgCreate(ctx),

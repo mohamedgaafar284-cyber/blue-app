@@ -2,7 +2,7 @@
 
 export interface OfflineAction {
   id: string;
-  type: "create-site-diary" | "approve-approval" | "reject-approval";
+  type: "create-site-diary" | "create-site-visit" | "create-defect" | "approve-approval" | "reject-approval";
   data: unknown;
   timestamp: number;
 }
@@ -82,6 +82,24 @@ export async function syncAction(action: OfflineAction): Promise<boolean> {
   try {
     if (action.type === "create-site-diary") {
       const res = await fetch("/api/site-diary", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(action.data),
+      });
+      return res.ok;
+    }
+
+    if (action.type === "create-site-visit") {
+      const res = await fetch("/api/site-visits", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(action.data),
+      });
+      return res.ok;
+    }
+
+    if (action.type === "create-defect") {
+      const res = await fetch("/api/defects", {
         method: "POST",
         headers,
         body: JSON.stringify(action.data),
