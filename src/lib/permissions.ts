@@ -77,6 +77,15 @@ const allNavItems: NavItem[] = [
     roles: allRoles,
   },
 
+  // ───── Field Portal (بوابة المهندس الميداني والموقع) ─────
+  {
+    id: "field-portal",
+    icon: "HardHat",
+    labelAr: "بوابة الموقع الميدانية",
+    labelEn: "Field Portal",
+    roles: ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
+  },
+
   // ───── 2. Clients (صفحة واحدة بتابات داخلية) ─────
   {
     id: "clients",
@@ -356,6 +365,7 @@ const ROUTE_ROLE_MATRIX: Record<string, Role[]> = {
   "/dashboard/risks": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/site-diary": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/site-visits": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
+  "/dashboard/field-portal": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/submittals": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/supervision": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/transmittals": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
