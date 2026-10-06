@@ -6,7 +6,7 @@
 import { useTranslations } from 'next-intl';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Bell, Plus, UserRoundPlus } from "lucide-react";
+import { Bell, Plus, UserRoundPlus, HardHat } from "lucide-react";
 import { formatToHijri } from "@/lib/hijri-utils";
 
 interface WelcomeSectionProps {
@@ -65,7 +65,15 @@ export function WelcomeSection({ userName, alertsCount, isAr, onNavigate }: Welc
           {tAuto('auto.hereSYourActivitySummaryAndKeyPerformanc')}
         </p>
         {/* Quick Create Buttons */}
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <Button
+            onClick={() => onNavigate("field-portal")}
+            size="sm"
+            className="h-8 px-3 text-xs gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold shadow-sm rounded-lg"
+          >
+            <HardHat className="h-3.5 w-3.5" />
+            {isAr ? "بوابة الموقع الميدانية" : "Field Portal"}
+          </Button>
           <Button
             onClick={() => onNavigate("clients")}
             size="sm"

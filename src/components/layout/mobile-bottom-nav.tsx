@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, FolderKanban, List,
-  Sparkles, Settings,
+  Sparkles, HardHat,
   CreditCard, FileText, Users, Shield,
   BarChart2, MapPin, Send, BookOpen,
   Calendar, BellRing, Activity, Search,
@@ -32,10 +32,10 @@ interface MoreMenuItem {
 
 const bottomNavItems: BottomNavItem[] = [
   { pageId: "dashboard", icon: LayoutDashboard, labelAr: "الرئيسية", labelEn: "Home" },
+  { pageId: "field-portal", icon: HardHat, labelAr: "الموقع", labelEn: "Site" },
   { pageId: "projects", icon: FolderKanban, labelAr: "المشاريع", labelEn: "Projects" },
   { pageId: "tasks", icon: List, labelAr: "المهام", labelEn: "Tasks" },
   { pageId: "ai-assistant", icon: Sparkles, labelAr: "المساعد الذكي", labelEn: "AI" },
-  { pageId: "settings", icon: Settings, labelAr: "الإعدادات", labelEn: "Settings" },
 ];
 
 const moreMenuItems: MoreMenuItem[] = [
