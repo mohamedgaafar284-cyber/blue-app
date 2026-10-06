@@ -41,8 +41,12 @@ export async function GET(request: NextRequest) {
 
     const where: Record<string, unknown> = { deletedAt: null, ...orgFilter(ctx) };
     if (projectId) where.projectId = projectId;
-    if (severity) where.severity = severity;
-    if (status) where.status = status;
+    if (severity) {
+      where.severity = { in: [severity.toUpperCase(), severity.toLowerCase()] };
+    }
+    if (status) {
+      where.status = { in: [status.toUpperCase(), status.toLowerCase()] };
+    }
     if (assigneeId) where.assigneeId = assigneeId;
 
     const usePagination = isPaginationRequested(searchParams);
@@ -127,12 +131,12 @@ export async function POST(request: NextRequest) {
       data: {
         projectId,
         title,
-        severity: (severity || "normal").toLowerCase(),
+        severity: (severity || "NORMAL").toUpperCase(),
         location: location || "",
         assigneeId: assigneeId || null,
         photos: photos || "",
         resolutionNotes: resolvedNotes,
-        status: (status || "open").toLowerCase(),
+        status: (status || "OPEN").toUpperCase(),
         ...orgCreate(ctx),
         createdById: ctx.userId,
       },

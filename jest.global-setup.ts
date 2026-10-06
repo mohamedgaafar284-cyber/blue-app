@@ -1,7 +1,7 @@
 import { spawn, execSync } from 'child_process';
 
 export default async function globalSetup() {
-  const execName = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+  const execName = 'bunx';
 
   console.info('\n[Global Setup] Initializing test database schema...');
   try {

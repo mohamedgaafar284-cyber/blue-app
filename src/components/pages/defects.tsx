@@ -78,22 +78,25 @@ interface UserOption { id: string; name: string; email: string; avatar: string; 
 
 // ===== Helpers =====
 function getSeverityConfig(severity: string) {
+  const norm = (severity || "").toUpperCase();
   const configs: Record<string, { label: string; labelEn: string; color: string; gradient: string; borderColor: string; pulse: boolean }> = {
+    LOW: { label: "منخفض", labelEn: "Low", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300", gradient: "", borderColor: "border-s-slate-300 dark:border-s-slate-600", pulse: false },
     NORMAL: { label: "عادي", labelEn: "Normal", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300", gradient: "", borderColor: "border-s-slate-300 dark:border-s-slate-600", pulse: false },
     MEDIUM: { label: "متوسط", labelEn: "Medium", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300", gradient: "from-amber-400 to-amber-500", borderColor: "border-s-amber-400", pulse: false },
     HIGH: { label: "عالي", labelEn: "High", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300", gradient: "from-orange-400 to-red-500", borderColor: "border-s-orange-500", pulse: false },
     CRITICAL: { label: "حرج", labelEn: "Critical", color: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300", gradient: "from-red-500 to-red-600", borderColor: "border-s-red-500", pulse: true },
   };
-  return configs[severity] || configs.NORMAL;
+  return configs[norm] || configs.NORMAL;
 }
 
 function getStatusConfig(status: string) {
+  const norm = (status || "").toUpperCase();
   const configs: Record<string, { label: string; labelEn: string; color: string }> = {
     OPEN: { label: "مفتوح", labelEn: "Open", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
     IN_PROGRESS: { label: "قيد التنفيذ", labelEn: "In Progress", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" },
     RESOLVED: { label: "تم الحل", labelEn: "Resolved", color: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300" },
   };
-  return configs[status] || configs.OPEN;
+  return configs[norm] || configs.OPEN;
 }
 
 // ===== Main Component =====
@@ -193,16 +196,16 @@ export default function Defects({ language, projectId }: DefectsProps) {
 
   // Summary calculations
   const totalDefects = defects.length;
-  const openCount = defects.filter((d) => d.status === "OPEN").length;
-  const inProgressCount = defects.filter((d) => d.status === "IN_PROGRESS").length;
-  const resolvedCount = defects.filter((d) => d.status === "RESOLVED").length;
-  const criticalCount = defects.filter((d) => d.severity === "CRITICAL" && d.status !== "RESOLVED").length;
+  const openCount = defects.filter((d) => (d.status || "").toUpperCase() === "OPEN").length;
+  const inProgressCount = defects.filter((d) => (d.status || "").toUpperCase() === "IN_PROGRESS").length;
+  const resolvedCount = defects.filter((d) => (d.status || "").toUpperCase() === "RESOLVED").length;
+  const criticalCount = defects.filter((d) => (d.severity || "").toUpperCase() === "CRITICAL" && (d.status || "").toUpperCase() !== "RESOLVED").length;
 
   // Severity distribution
-  const normalCount = defects.filter((d) => d.severity === "NORMAL").length;
-  const mediumCount = defects.filter((d) => d.severity === "MEDIUM").length;
-  const highCount = defects.filter((d) => d.severity === "HIGH").length;
-  const criticalTotal = defects.filter((d) => d.severity === "CRITICAL").length;
+  const normalCount = defects.filter((d) => (d.severity || "").toUpperCase() === "NORMAL" || (d.severity || "").toUpperCase() === "LOW").length;
+  const mediumCount = defects.filter((d) => (d.severity || "").toUpperCase() === "MEDIUM").length;
+  const highCount = defects.filter((d) => (d.severity || "").toUpperCase() === "HIGH").length;
+  const criticalTotal = defects.filter((d) => (d.severity || "").toUpperCase() === "CRITICAL").length;
 
   return (
     <div className="space-y-4">

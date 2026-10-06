@@ -97,12 +97,14 @@ function getMunicipalityLabel(val: string, ar: boolean) {
 }
 
 function getStatusConfig(status: string) {
+  const norm = (status || "").toUpperCase();
   const configs: Record<string, { label: string; labelEn: string; color: string }> = {
     DRAFT: { label: "مسودة", labelEn: "Draft", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
     SUBMITTED: { label: "مرسل", labelEn: "Submitted", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" },
     APPROVED: { label: "معتمد", labelEn: "Approved", color: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300" },
+    COMPLETED: { label: "مكتمل", labelEn: "Completed", color: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300" },
   };
-  return configs[status] || configs.DRAFT;
+  return configs[norm] || configs.DRAFT;
 }
 
 // ===== Weather conditions =====
