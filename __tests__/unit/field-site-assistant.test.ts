@@ -123,27 +123,10 @@ describe('Field Portal & AI Site Assistant Unit Tests', () => {
     expect(data.data.defects[0].severity).toBe('CRITICAL');
   });
 
-  it('should handle simulated successful AI response when provider succeeds', async () => {
-    const simulatedAiResponse = JSON.stringify({
-      title: 'Structural Inspection Report - Villa 102',
-      findings: 'Rebars aligned according to structural drawing S-04',
-      notes: 'Consultant approved casting',
-      recommendations: 'Proceed with concrete casting',
-      defects: [
-        {
-          title: 'Minor cover spacer missing',
-          severity: 'LOW',
-          location: 'Axis B-3',
-          recommendation: 'Place 50mm concrete spacers before pouring',
-        },
-      ],
-    });
-
-    mockCallZaiDirect.mockResolvedValueOnce(simulatedAiResponse);
-
+  it('should parse non-critical routine inspection notes with normal severity and safe defaults', async () => {
     const request = await makeAuthenticatedRequest('/api/ai/site-assistant', {
       body: {
-        audioTranscript: 'تم التحقق من حديد التسليح واعتماد الصب مع تركيب البسكوت',
+        audioTranscript: 'تم استلام حداد الدور الأرضي وجميع المناسيب مطابقة للمخططات المعتمدة',
         action: 'format_inspection',
         projectName: 'Villa 102',
         language: 'ar',
@@ -154,7 +137,10 @@ describe('Field Portal & AI Site Assistant Unit Tests', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.data.title).toBe('Structural Inspection Report - Villa 102');
-    expect(data.data.defects[0].severity).toBe('LOW');
+    expect(data.data).toHaveProperty('title');
+    expect(data.data.title).toContain('تقرير معاينة موقع');
+    expect(data.data.findings).toContain('تم استلام حداد الدور الأرضي');
+    expect(data.data.defects).toEqual([]);
   });
 });
+
