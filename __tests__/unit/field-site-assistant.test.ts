@@ -1,11 +1,26 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { SignJWT } from 'jose';
 import { NextRequest } from 'next/server';
-import { POST as siteAssistantPOST } from '@/app/api/ai/site-assistant/route';
 import { getJwtSecretBytes } from '@/lib/auth/jwt-secret';
 import { db } from '@/lib/db';
 
 process.env.JWT_SECRET = 'test-secret-at-least-32-characters-long!';
+
+// 1. Isolate test from real external AI providers and ZAI config
+const mockCallZaiDirect = jest.fn<any>();
+jest.mock('@/lib/ai/chat-service', () => ({
+  callZaiDirect: (...args: any[]) => mockCallZaiDirect(...args),
+}));
+
+jest.mock('@/lib/ai/providers/registry', () => ({
+  providerRegistry: {
+    getFirstAvailableExternalProvider: jest.fn().mockReturnValue(null),
+    getProvider: jest.fn().mockReturnValue(null),
+  },
+}));
+
+// Import route AFTER mocks are in place
+import { POST as siteAssistantPOST } from '@/app/api/ai/site-assistant/route';
 
 const spyDbUserFindUnique = jest.spyOn(db.user, 'findUnique');
 
@@ -23,7 +38,7 @@ async function makeAuthenticatedRequest(
   path: string,
   options: { method?: string; body?: unknown; role?: string } = {}
 ): Promise<NextRequest> {
-  const role = options.role || 'ADMIN';
+  const role = options.role || 'ENGINEER';
   const token = await generateTestToken({
     userId: 'test-user-1',
     email: 'engineer@blueprint.ae',
@@ -54,6 +69,7 @@ describe('Field Portal & AI Site Assistant Unit Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     spyDbUserFindUnique.mockResolvedValue(null as any);
+    mockCallZaiDirect.mockRejectedValue(new Error('AI provider offline in deterministic test'));
   });
 
   it('should validate missing transcript and reject with 400', async () => {
@@ -67,7 +83,7 @@ describe('Field Portal & AI Site Assistant Unit Tests', () => {
     expect(data).toHaveProperty('error');
   });
 
-  it('should process speech transcript using fallback parser in Arabic', async () => {
+  it('should process speech transcript using fallback parser in Arabic deterministically', async () => {
     const request = await makeAuthenticatedRequest('/api/ai/site-assistant', {
       body: {
         audioTranscript: 'تم صب أعمدة الدور الأول وفحص كانات حديد التسليح وبها تعشيش عميق',
@@ -89,7 +105,7 @@ describe('Field Portal & AI Site Assistant Unit Tests', () => {
     expect(data.data.defects[0].severity).toBe('CRITICAL');
   });
 
-  it('should process speech transcript using fallback parser in English', async () => {
+  it('should process speech transcript using fallback parser in English deterministically', async () => {
     const request = await makeAuthenticatedRequest('/api/ai/site-assistant', {
       body: {
         audioTranscript: 'Inspection of ground floor slab completed with major crack observed near column C2',
@@ -105,5 +121,40 @@ describe('Field Portal & AI Site Assistant Unit Tests', () => {
     expect(data.success).toBe(true);
     expect(data.data.title).toContain('Site Inspection Report');
     expect(data.data.defects[0].severity).toBe('CRITICAL');
+  });
+
+  it('should handle simulated successful AI response when provider succeeds', async () => {
+    const simulatedAiResponse = JSON.stringify({
+      title: 'Structural Inspection Report - Villa 102',
+      findings: 'Rebars aligned according to structural drawing S-04',
+      notes: 'Consultant approved casting',
+      recommendations: 'Proceed with concrete casting',
+      defects: [
+        {
+          title: 'Minor cover spacer missing',
+          severity: 'LOW',
+          location: 'Axis B-3',
+          recommendation: 'Place 50mm concrete spacers before pouring',
+        },
+      ],
+    });
+
+    mockCallZaiDirect.mockResolvedValueOnce(simulatedAiResponse);
+
+    const request = await makeAuthenticatedRequest('/api/ai/site-assistant', {
+      body: {
+        audioTranscript: 'تم التحقق من حديد التسليح واعتماد الصب مع تركيب البسكوت',
+        action: 'format_inspection',
+        projectName: 'Villa 102',
+        language: 'ar',
+      },
+    });
+
+    const response = await siteAssistantPOST(request);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.data.title).toBe('Structural Inspection Report - Villa 102');
+    expect(data.data.defects[0].severity).toBe('LOW');
   });
 });
