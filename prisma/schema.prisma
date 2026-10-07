@@ -1068,7 +1068,7 @@ model SiteVisit {
   neighborDesc    String    @default("")
   buildingDesc    String    @default("")
   photos          String    @default("") // JSON array of photo URLs
-  status          String    @default("draft") // draft, submitted, approved
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, APPROVED
   notes           String    @default("")
   organizationId  String
   createdById     String?
@@ -1090,12 +1090,12 @@ model Defect {
   id              String    @id @default(cuid())
   projectId       String
   title           String    @default("")
-  severity        String    @default("normal") // normal, medium, high, critical
+  severity        String    @default("NORMAL") // NORMAL, MEDIUM, HIGH, CRITICAL
   location        String    @default("")
   photos          String    @default("")
   assigneeId      String?
   resolutionNotes String    @default("")
-  status          String    @default("open") // open, in_progress, resolved
+  status          String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED
   deletedAt       DateTime? // Soft delete
   organizationId  String
   createdById     String?

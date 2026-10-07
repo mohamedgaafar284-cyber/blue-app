@@ -264,6 +264,11 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
           const docUrl = doc.data?.filePath || doc.filePath || `/api/documents/${doc.id || doc.data?.id}/download`;
           setPhotoUrls((prev) => [...prev, docUrl]);
         } else {
+          toast.warning(
+            isAr
+              ? `تعذر رفع الصورة للسيرفر (${res.status})، سيتم إرفاقها محلياً مؤقتاً`
+              : `Server upload failed (${res.status}), attaching local preview fallback`
+          );
           // Fallback to local data URL preview if upload endpoint is unavailable
           const reader = new FileReader();
           reader.onload = (ev) => {
@@ -275,6 +280,18 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
         }
       } catch (err) {
         console.error("Photo upload error:", err);
+        toast.warning(
+          isAr
+            ? "تعذر الاتصال بخدمة المستندات، سيتم إرفاق الصورة محلياً"
+            : "Document service unreachable, attaching locally"
+        );
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (ev.target?.result) {
+            setPhotoUrls((prev) => [...prev, ev.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
       }
     }
 

@@ -266,6 +266,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   [UserRoleValues.ENGINEER]: [
     Permission.PROJECT_READ,
     Permission.TASK_CREATE, Permission.TASK_READ, Permission.TASK_UPDATE,
+    Permission.DOCUMENT_CREATE,
     Permission.CLIENT_READ,
     Permission.INVOICE_READ,
     Permission.CONTRACT_READ,
