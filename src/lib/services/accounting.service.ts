@@ -779,6 +779,88 @@ export async function createPaymentJournalEntry(
 }
 
 /**
+ * Create a journal entry for an operating expense.
+ * Debit: Expense Account (5010, 5020, 5030, 5040, 5100) — expense amount
+ * Credit: Cash on Hand (1010) or Bank Account (1020) — expense amount
+ *
+ * @param tx - Prisma transaction client
+ * @param organizationId - Organization ID
+ * @param reference - Voucher or receipt reference
+ * @param description - Expense description
+ * @param amount - Expense amount
+ * @param expenseCategory - Category mapping to expense account ('salaries' | 'rent' | 'travel' | 'utilities' | 'general' or account code directly)
+ * @param paymentMethod - 'cash' | 'bank'
+ * @param _userId - User recording the expense
+ */
+export async function createExpenseJournalEntry(
+  tx: TransactionClient,
+  organizationId: string,
+  reference: string,
+  description: string,
+  amount: Prisma.Decimal | number,
+  expenseCategory: string,
+  paymentMethod: 'cash' | 'bank' = 'cash',
+  _userId: string
+): Promise<void> {
+  const amountDec = new Prisma.Decimal(amount);
+  if (amountDec.lte(0)) {
+    throw new Error('Expense amount must be positive');
+  }
+
+  // Map category to account code
+  const categoryCodeMap: Record<string, string> = {
+    salaries: '5010',
+    rent: '5020',
+    travel: '5030',
+    transport: '5030',
+    utilities: '5040',
+    general: '5100',
+    admin: '5100',
+    '5010': '5010',
+    '5020': '5020',
+    '5030': '5030',
+    '5040': '5040',
+    '5100': '5100',
+  };
+
+  const accountCode = categoryCodeMap[expenseCategory.toLowerCase()] || '5100';
+
+  const expenseAccountId = await getAccountByCode(tx, organizationId, accountCode);
+  const cashAccountId = await getAccountByCode(tx, organizationId, '1010');
+  const bankAccountId = await getAccountByCode(tx, organizationId, '1020');
+
+  const creditAccountId = paymentMethod === 'bank' ? bankAccountId : cashAccountId;
+
+  const journalEntry = await tx.journalEntry.create({
+    data: {
+      date: new Date(),
+      reference: reference || `EXP-${Date.now()}`,
+      description: description || `Operating Expense (${expenseCategory})`,
+      organizationId,
+    },
+  });
+
+  await tx.journalLine.createMany({
+    data: [
+      // Debit: Expense
+      {
+        journalEntryId: journalEntry.id,
+        accountId: expenseAccountId,
+        debit: amountDec,
+        credit: new Prisma.Decimal(0),
+      },
+      // Credit: Cash or Bank
+      {
+        journalEntryId: journalEntry.id,
+        accountId: creditAccountId,
+        debit: new Prisma.Decimal(0),
+        credit: amountDec,
+      },
+    ],
+  });
+}
+
+/**
  * Seed default chart of accounts for a new organization.
  * Called during organization creation or setup.
  */
