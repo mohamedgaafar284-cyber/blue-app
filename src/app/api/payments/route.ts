@@ -12,6 +12,7 @@ import { cachedQuery, invalidateCache, CACHE_TTL, buildCacheKey } from '@/lib/ca
 import { cacheGet, cacheSet, cacheDeletePattern } from '@/lib/cache/redis';
 import { withRateLimit, rateLimitResponse } from '@/lib/rate-limit-middleware';
 import { invoiceService } from '@/lib/services/invoice.service';
+import { createExpenseJournalEntry } from '@/lib/services/accounting.service';
 
 /**
  * @openapi
@@ -238,31 +239,54 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const payment = await db.payment.create({
-      data: {
-        voucherNumber: voucherNumber || "",
-        projectId: projectId || null,
-        amount,
-        payMethod: payMethod,
-        beneficiary: beneficiary || "",
-        referenceNumber: referenceNumber || "",
-        description: description || "",
-        // Explicit uppercase status — do NOT rely on the column default.
-        // The whole payments workflow (UI filters, approve/complete mutations,
-        // Stripe webhook) uses PENDING/APPROVED/COMPLETED/CANCELLED; a lowercase
-        // legacy default made new vouchers invisible in the "pending" filter.
-        status: "PENDING",
-        ...orgCreate(ctx),
-        createdById: ctx.userId,
-      },
-      include: {
-        approver: { select: { id: true, name: true } },
-        project: { select: { id: true, name: true, nameEn: true, number: true } },
-      },
+    const payment = await db.$transaction(async (tx) => {
+      const createdPayment = await tx.payment.create({
+        data: {
+          voucherNumber: voucherNumber || "",
+          projectId: projectId || null,
+          amount,
+          payMethod: payMethod,
+          beneficiary: beneficiary || "",
+          referenceNumber: referenceNumber || "",
+          description: description || "",
+          status: "APPROVED",
+          ...orgCreate(ctx),
+          createdById: ctx.userId,
+        },
+        include: {
+          approver: { select: { id: true, name: true } },
+          project: { select: { id: true, name: true, nameEn: true, number: true } },
+        },
+      });
+
+      // GL Auto-Posting: post general payment as operating expense to ledger atomically
+      if (ctx.organizationId) {
+        try {
+          await createExpenseJournalEntry(
+            tx,
+            ctx.organizationId,
+            createdPayment.voucherNumber || `PAY-${createdPayment.id.slice(-6)}`,
+            createdPayment.description || `Payment to ${beneficiary || 'supplier'}`,
+            amount,
+            'general',
+            payMethod === 'cash' ? 'cash' : 'bank',
+            ctx.userId
+          );
+        } catch (glErr) {
+          log.error('GL: Failed to create journal entry for direct payment', {
+            paymentId: createdPayment.id,
+            error: glErr instanceof Error ? glErr.message : String(glErr),
+          });
+          throw glErr;
+        }
+      }
+
+      return createdPayment;
     });
 
-    // Invalidate payment caches after creation
+    // Invalidate payment and dashboard caches after creation
     await invalidateCache('payments');
+    await cacheDeletePattern(`dashboard:${ctx.organizationId || 'global'}:*`);
 
     if (idempotencyKey) {
       const redisKey = `idempotency:payment:${ctx.userId}:${idempotencyKey}`;

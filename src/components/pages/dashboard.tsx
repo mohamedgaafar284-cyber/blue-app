@@ -35,6 +35,7 @@ import { DeptWorkload } from "./dashboard/dept-workload";
 const RevenueDepartment = dynamic(() => import("./dashboard/revenue-department").then(m => m.RevenueDepartment), { ssr: false, loading: () => <WidgetSkeleton /> });
 const ChartsSection = dynamic(() => import("./dashboard/charts-section").then(m => m.ChartsSection), { ssr: false, loading: () => <WidgetSkeleton /> });
 const ProjectHealthBudget = dynamic(() => import("./dashboard/project-health-budget").then(m => m.ProjectHealthBudget), { ssr: false, loading: () => <WidgetSkeleton /> });
+import { FinancialHealthCard } from "./dashboard/financial-health-card";
 
 // ===== Main Dashboard Component =====
 export default function Dashboard({ language }: { language: "ar" | "en" }) {
@@ -194,6 +195,9 @@ export default function Dashboard({ language }: { language: "ar" | "en" }) {
       <WidgetSlot widgetId="kpi-cards" layout={layout} language={language}>
         <StatCards statCards={statCards} />
       </WidgetSlot>
+
+      {/* ===== QW4: Real-time Financial Health Snapshot ===== */}
+      <FinancialHealthCard language={language} />
 
       <WidgetSlot widgetId="quick-overview" layout={layout} language={language}>
         {/* ===== Quick Overview Strip ===== */}
