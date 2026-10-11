@@ -3,17 +3,20 @@
 
 import { formatCurrency as formatCurrencyMulti } from './currency';
 import { formatToHijri } from './hijri-utils';
+import { getCachedCurrency } from '@/hooks/use-currency';
 
 /**
- * Format a number as AED currency (backward-compatible)
- * SECURITY FIX: Prisma Decimal fields are serialized as strings in JSON.
- * This function accepts string|number and safely converts to Number before
- * formatting. Without this, string concatenation or type coercion produces
- * garbage values (e.g. "66250" + "66250" = "6625066250" instead of 132500).
+ * Format a number with dynamic organization currency (backward-compatible).
+ * Uses organization's configured currency by default, with custom currency override.
  */
-export function formatCurrency(amount: number | string | undefined | null, ar: boolean): string {
+export function formatCurrency(
+  amount: number | string | undefined | null,
+  ar: boolean,
+  currencyOverride?: string
+): string {
   const num = Number(amount) || 0;
-  return `${num.toLocaleString(ar ? "ar-AE" : "en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${ar ? "د.إ" : "AED"}`;
+  const currencyCode = currencyOverride || getCachedCurrency();
+  return formatCurrencyMulti(num, currencyCode, ar ? "ar" : "en");
 }
 
 /**

@@ -15,8 +15,8 @@ async function getJsPDF() {
   return jspdfCache;
 }
 
-function formatCurrency(amount: number): string {
-  return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`;
+function formatCurrency(amount: number, currencyCode: string = 'AED'): string {
+  return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currencyCode}`;
 }
 
 /**
@@ -61,6 +61,7 @@ export async function generateInvoicePDFBuffer(invoiceId: string, lang: 'ar' | '
   const settings = await db.companySettings.findFirst({
     where: { organizationId: invoice.organizationId },
   });
+  const orgCurrency = settings?.currency || 'AED';
   const orgName = lang === 'ar' ? (settings?.name || 'BluePrint') : (settings?.nameEn || 'BluePrint Engineering');
 
   const { jsPDF, autoTable } = await getJsPDF();
@@ -207,8 +208,8 @@ export async function generateInvoicePDFBuffer(invoiceId: string, lang: 'ar' | '
     (idx + 1).toString(),
     preprocessArabicText(item.description || '-'),
     item.quantity.toLocaleString(),
-    formatCurrency(Number(item.unitPrice)),
-    formatCurrency(Number(item.total)),
+    formatCurrency(Number(item.unitPrice), orgCurrency),
+    formatCurrency(Number(item.total), orgCurrency),
   ]);
 
   autoTable(doc, {
@@ -261,7 +262,7 @@ export async function generateInvoicePDFBuffer(invoiceId: string, lang: 'ar' | '
   doc.text(lang === 'ar' ? 'المجموع الفرعي' : 'Subtotal', pageWidth - margin - 30, totalsY + 2, { align: 'right' });
   doc.setTextColor(30, 41, 59);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(Number(invoice.subtotal)), pageWidth - margin, totalsY + 2, { align: 'right' });
+  doc.text(formatCurrency(Number(invoice.subtotal), orgCurrency), pageWidth - margin, totalsY + 2, { align: 'right' });
 
   // VAT — rate comes from the invoice itself, not a hardcoded 5%
   totalsY += 7;
@@ -270,7 +271,7 @@ export async function generateInvoicePDFBuffer(invoiceId: string, lang: 'ar' | '
   doc.text(formatTaxRateLabel(Number(invoice.taxRate), lang), pageWidth - margin - 30, totalsY + 2, { align: 'right' });
   doc.setTextColor(30, 41, 59);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(Number(invoice.tax)), pageWidth - margin, totalsY + 2, { align: 'right' });
+  doc.text(formatCurrency(Number(invoice.tax), orgCurrency), pageWidth - margin, totalsY + 2, { align: 'right' });
 
   // Grand Total
   totalsY += 9;
@@ -283,7 +284,7 @@ export async function generateInvoicePDFBuffer(invoiceId: string, lang: 'ar' | '
   doc.text(lang === 'ar' ? 'الإجمالي الكلي' : 'Grand Total', pageWidth - margin - 30, totalsY + 2, { align: 'right' });
   doc.setTextColor(...TEAL);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(Number(invoice.total)), pageWidth - margin, totalsY + 2, { align: 'right' });
+  doc.text(formatCurrency(Number(invoice.total), orgCurrency), pageWidth - margin, totalsY + 2, { align: 'right' });
 
   // Paid amount & balance
   if (Number(invoice.paidAmount) > 0) {
@@ -292,13 +293,13 @@ export async function generateInvoicePDFBuffer(invoiceId: string, lang: 'ar' | '
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(34, 197, 94);
     doc.text(lang === 'ar' ? 'المبلغ المدفوع:' : 'Amount Paid:', pageWidth - margin - 30, totalsY, { align: 'right' });
-    doc.text(formatCurrency(Number(invoice.paidAmount)), pageWidth - margin, totalsY, { align: 'right' });
+    doc.text(formatCurrency(Number(invoice.paidAmount), orgCurrency), pageWidth - margin, totalsY, { align: 'right' });
 
     totalsY += 6;
     const balance = Number(invoice.total) - Number(invoice.paidAmount);
     doc.setTextColor(balance > 0 ? 234 : 34, balance > 0 ? 179 : 197, balance > 0 ? 8 : 94);
     doc.text(lang === 'ar' ? 'المبلغ المستحق:' : 'Balance Due:', pageWidth - margin - 30, totalsY, { align: 'right' });
-    doc.text(formatCurrency(balance), pageWidth - margin, totalsY, { align: 'right' });
+    doc.text(formatCurrency(balance, orgCurrency), pageWidth - margin, totalsY, { align: 'right' });
   }
 
   // Tax number
