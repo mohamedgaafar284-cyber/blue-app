@@ -16,8 +16,8 @@ async function getJsPDF() {
   return jspdfCache;
 }
 
-function formatCurrency(amount: number): string {
-  return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`;
+function formatCurrency(amount: number, currencyCode: string = 'AED'): string {
+  return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currencyCode}`;
 }
 
 function formatDate(date: Date | string | null | undefined): string {
@@ -200,9 +200,10 @@ export async function generateContractPDFBuffer(contractId: string, lang: 'ar' |
 
   yPos += 8;
 
+  const contractCurrency = settings?.currency || 'AED';
   const detailsData: string[][] = [];
   detailsData.push([t.contractType, CONTRACT_TYPE_LABELS[contract.type]?.[lang] || contract.type]);
-  detailsData.push([t.contractValue, formatCurrency(Number(contract.value))]);
+  detailsData.push([t.contractValue, formatCurrency(Number(contract.value), contractCurrency)]);
 
   if (contract.project) {
     detailsData.push([t.projectName, lang === 'ar' ? contract.project.name : (contract.project.nameEn || contract.project.name)]);

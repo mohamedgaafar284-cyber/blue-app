@@ -15,8 +15,8 @@ async function getJsPDF() {
   return jspdfCache;
 }
 
-function formatCurrency(amount: number): string {
-  return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`;
+function formatCurrency(amount: number, currencyCode: string = 'AED'): string {
+  return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currencyCode}`;
 }
 
 function formatDate(date: Date | string | undefined): string {
@@ -186,12 +186,14 @@ export async function generateProposalPDFBuffer(proposalId: string, lang: 'ar' |
     ? [['#', t.description, t.quantity, t.unitPrice, t.total]]
     : [['#', t.description, t.quantity, t.unitPrice, t.total]];
 
+  const proposalCurrency = settings?.currency || 'AED';
+
   const tableData = proposal.items.map((item, idx) => [
     (idx + 1).toString(),
     preprocessArabicText(item.description),
     item.quantity.toLocaleString(),
-    formatCurrency(Number(item.unitPrice)),
-    formatCurrency(Number(item.total)),
+    formatCurrency(Number(item.unitPrice), proposalCurrency),
+    formatCurrency(Number(item.total), proposalCurrency),
   ]);
 
   autoTable(doc, {
@@ -243,13 +245,13 @@ export async function generateProposalPDFBuffer(proposalId: string, lang: 'ar' |
   doc.setTextColor(100, 116, 139);
   doc.text(t.subtotal + ':', totalsX, yPos);
   doc.setTextColor(30, 41, 59);
-  doc.text(formatCurrency(Number(proposal.subtotal)), totalsX + totalsWidth, yPos, { align: 'right' });
+  doc.text(formatCurrency(Number(proposal.subtotal), proposalCurrency), totalsX + totalsWidth, yPos, { align: 'right' });
 
   yPos += 6;
   doc.setTextColor(100, 116, 139);
   doc.text(t.tax, totalsX, yPos);
   doc.setTextColor(30, 41, 59);
-  doc.text(formatCurrency(Number(proposal.tax)), totalsX + totalsWidth, yPos, { align: 'right' });
+  doc.text(formatCurrency(Number(proposal.tax), proposalCurrency), totalsX + totalsWidth, yPos, { align: 'right' });
 
   yPos += 8;
   doc.setDrawColor(...TEAL);
@@ -260,7 +262,7 @@ export async function generateProposalPDFBuffer(proposalId: string, lang: 'ar' |
   doc.setTextColor(...TEAL);
   doc.setFont('helvetica', 'bold');
   doc.text(t.grandTotal + ':', totalsX, yPos);
-  doc.text(formatCurrency(Number(proposal.total)), totalsX + totalsWidth, yPos + 2, { align: 'right' });
+  doc.text(formatCurrency(Number(proposal.total), proposalCurrency), totalsX + totalsWidth, yPos + 2, { align: 'right' });
 
   yPos += 15;
 

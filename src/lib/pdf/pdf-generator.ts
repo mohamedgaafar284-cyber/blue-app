@@ -355,7 +355,7 @@ export async function generateProjectReportPDF(data: ProjectReportData): Promise
     p.client,
     getStatusLabel(p.status, data.language),
     `${p.progress}%`,
-    formatCurrency(p.budget, 'AED', data.language),
+    formatCurrency(p.budget, settings.currency || 'AED', data.language),
   ]);
 
   autoTable(doc, {

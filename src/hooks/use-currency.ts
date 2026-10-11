@@ -26,7 +26,22 @@ interface CurrencySettings {
 let cachedSettings: CurrencySettings | null = null;
 let settingsPromise: Promise<CurrencySettings> | null = null;
 
-async function fetchCurrencySettings(): Promise<CurrencySettings> {
+export function getCachedCurrency(): string {
+  return cachedSettings?.defaultCurrency || 'AED';
+}
+
+export function setCachedCurrency(currency: string): void {
+  if (cachedSettings) {
+    cachedSettings.defaultCurrency = currency;
+  } else {
+    cachedSettings = {
+      defaultCurrency: currency,
+      exchangeRates: DEFAULT_EXCHANGE_RATES,
+    };
+  }
+}
+
+export async function fetchCurrencySettings(): Promise<CurrencySettings> {
   if (cachedSettings) return cachedSettings;
   if (settingsPromise) return settingsPromise;
 

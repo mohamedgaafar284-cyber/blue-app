@@ -18,6 +18,7 @@ import { AppearanceTab } from "./settings/appearance-tab";
 import { NotificationsTab } from "./settings/notifications-tab";
 import { SecurityTab } from "./settings/security-tab";
 import { BillingTab } from "./settings/billing-tab";
+import { setCachedCurrency } from "@/hooks/use-currency";
 
 import { SettingsSkeleton } from "./settings/settings-skeleton";
 import type { NotificationSettings, PasswordForm, DangerConfirmType } from "./settings/types";
@@ -162,7 +163,11 @@ export default function SettingsPage({ language: lang }: Props) {
         body: JSON.stringify(data),
       }).then((r) => r.json()),
     onSuccess: () => {
+      if (formData.currency) {
+        setCachedCurrency(String(formData.currency));
+      }
       queryClient.invalidateQueries({ queryKey: ["company-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["finance"] });
       setSaved(true);
       setSaving(false);
       setTimeout(() => setSaved(false), 2000);
