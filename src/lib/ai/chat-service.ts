@@ -934,9 +934,49 @@ export async function fetchProjectContext(projectId: string, ctx: AuthContext): 
 // ============================================
 // Demo Mode AI Responses (works without API keys)
 // ============================================
-export function getDemoResponse(message: string, language: string, contextData: Record<string, unknown>): string {
+export function getDemoResponse(message: string, language: string, contextData: Record<string, unknown>, currency = 'AED'): string {
   const isAr = language === 'ar';
   const lower = message.toLowerCase();
+
+  // Financial & Ledger Live Analysis (QW7)
+  if (/فلوس|محصل|تحصيل|إيراد|دخل|مصروف|أرباح|خسائر|دفتر|أستاذ|ميزانية|فاتور|ديون|مديون|money|revenue|expense|profit|loss|receivable|payable|invoice|ledger/.test(lower)) {
+    const fin = contextData.financial as Record<string, any> | undefined;
+
+    if (fin) {
+      const rev = fin.totalRevenue ?? 0;
+      const outstanding = fin.outstandingTotal ?? 0;
+      const overdueList = Array.isArray(fin.overdueInvoices) ? fin.overdueInvoices : [];
+
+      if (isAr) {
+        let resp = `💼 **التقرير المالي الذكي المباشر:**\n\n`;
+        resp += `• **إجمالي الإيرادات المحصلة:** \`${Number(rev).toLocaleString()} ${currency}\`\n`;
+        resp += `• **مستحقات معلقة لدى العملاء:** \`${Number(outstanding).toLocaleString()} ${currency}\`\n`;
+
+        if (overdueList.length > 0) {
+          resp += `\n⚠️ **تنبيه فواتير متأخرة التحصيل (${overdueList.length}):**\n`;
+          overdueList.slice(0, 3).forEach((inv: any) => {
+            resp += `- فاتورة **${inv.number}** للعميل (${inv.clientName || 'غير محدد'}): المتبقي \`${Number(inv.remaining).toLocaleString()} ${currency}\`\n`;
+          });
+        } else {
+          resp += `\n✅ لا توجد فواتير حرجة متأخرة حالياً.\n`;
+        }
+        resp += `\n📌 *البيانات مستخرجة لحظياً من دفتر الأستاذ العام وفواتير النظام.*`;
+        return resp;
+      } else {
+        let resp = `💼 **Live Financial Intelligence Snapshot:**\n\n`;
+        resp += `• **Total Collected Revenue:** \`${Number(rev).toLocaleString()} ${currency}\`\n`;
+        resp += `• **Outstanding Receivables:** \`${Number(outstanding).toLocaleString()} ${currency}\`\n`;
+        if (overdueList.length > 0) {
+          resp += `\n⚠️ **Overdue Invoices Alert (${overdueList.length}):**\n`;
+          overdueList.slice(0, 3).forEach((inv: any) => {
+            resp += `- Invoice **${inv.number}** (${inv.clientName || 'N/A'}): \`${Number(inv.remaining).toLocaleString()} ${currency}\` remaining\n`;
+          });
+        }
+        resp += `\n📌 *Data sourced live from General Ledger & invoices.*`;
+        return resp;
+      }
+    }
+  }
 
   // Engineering-specific demo responses — cost/construction
   if (/تكلفة|سعر|كلفة|cost|price|budget|كم|ميزانية|تقدير|estimate|BOQ|كميات/.test(lower)) {
