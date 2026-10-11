@@ -1,13 +1,14 @@
 "use client";
 
 
-import { useTranslations } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { X, CheckCircle2, Users, Activity, Wallet, CheckSquare, Clock, MessageSquare, ArrowUpRight } from "lucide-react";
+import { X, CheckCircle2, Users, Wallet, CheckSquare, Clock, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProjectRow } from "./types";
 import { statusConfig, typeConfig } from "./types";
+
+import { useQuery } from "@tanstack/react-query";
 
 interface ProjectQuickViewProps {
   project: ProjectRow;
@@ -17,6 +18,18 @@ interface ProjectQuickViewProps {
   onOpenFull: () => void;
 }
 
+interface ProjectDetailResponse {
+  assignments?: Array<{
+    user?: {
+      id: string;
+      name: string;
+      avatar?: string;
+      department?: string;
+      position?: string;
+    };
+  }>;
+}
+
 export function ProjectQuickView({
   project,
   isAr,
@@ -24,24 +37,22 @@ export function ProjectQuickView({
   onClose,
   onOpenFull,
 }: ProjectQuickViewProps) {
-  const tAuto = useTranslations();
   const st = statusConfig[project.status] || statusConfig.active;
   const tp = typeConfig[project.type] || typeConfig.VILLA;
 
-  const mockActivities = [
-    { id: "1", text: tAuto('auto.projectCreated'), time: project.createdAt, color: "bg-brand-navy-500", icon: <CheckCircle2 className="h-3 w-3" /> },
-    { id: "2", text: tAuto('auto.initialTeamAssigned'), time: project.createdAt, color: "bg-blue-500", icon: <Users className="h-3 w-3" /> },
-    { id: "3", text: tAuto('auto.designPhaseStarted'), time: project.createdAt, color: "bg-amber-500", icon: <Activity className="h-3 w-3" /> },
-    { id: "4", text: tAuto('auto.drawingReview'), time: project.createdAt, color: "bg-violet-500", icon: <MessageSquare className="h-3 w-3" /> },
-    { id: "5", text: tAuto('auto.progressUpdated'), time: project.createdAt, color: "bg-emerald-500", icon: <ArrowUpRight className="h-3 w-3" /> },
-  ];
+  const { data: projectDetail } = useQuery<ProjectDetailResponse>({
+    queryKey: ["project-quick-view", project.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${project.id}`);
+      if (!res.ok) return {};
+      return res.json();
+    },
+    staleTime: 60 * 1000,
+  });
 
-  const mockTeam = [
-    { name: tAuto('auto.ahmedM'), color: "bg-brand-navy-500" },
-    { name: tAuto('auto.fatimaS'), color: "bg-amber-500" },
-    { name: tAuto('auto.mohammedK'), color: "bg-blue-500" },
-    { name: tAuto('auto.saraB'), color: "bg-violet-500" },
-  ];
+  const team = (projectDetail?.assignments || [])
+    .map(a => a.user)
+    .filter((u): u is NonNullable<typeof u> => Boolean(u));
 
   const progressColor = project.progress >= 80 ? "text-emerald-500" : project.progress >= 50 ? "text-brand-navy-500" : project.progress >= 25 ? "text-amber-500" : "text-red-500";
   const progressStroke = project.progress >= 80 ? "#10b981" : project.progress >= 50 ? "#133371" : project.progress >= 25 ? "#f59e0b" : "#ef4444";
@@ -131,39 +142,44 @@ export function ProjectQuickView({
         {/* Team Members */}
         <div>
           <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-3">{t("فريق المشروع", "Project Team")}</h4>
-          <div className="flex items-center gap-1">
-            {mockTeam.map((member, idx) => (
-              <div key={member.name} className="relative" style={{ zIndex: mockTeam.length - idx }}>
-                <Avatar className="h-8 w-8 border-2 border-white dark:border-slate-900" style={{ marginInlineStart: idx > 0 ? "-6px" : "0" }}>
-                  <AvatarFallback className={cn("text-white text-[10px] font-semibold", member.color)}>
-                    {member.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            ))}
-            <span className="text-[11px] text-slate-400 dark:text-slate-500 ms-2">{mockTeam.length} {t("عضو", "members")}</span>
-          </div>
+          {team.length > 0 ? (
+            <div className="flex items-center gap-1">
+              {team.map((member, idx) => (
+                <div key={member.id} className="relative" style={{ zIndex: team.length - idx }}>
+                  <Avatar className="h-8 w-8 border-2 border-white dark:border-slate-900" style={{ marginInlineStart: idx > 0 ? "-6px" : "0" }}>
+                    <AvatarFallback className="text-white text-[10px] font-semibold bg-brand-navy-600">
+                      {member.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              ))}
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 ms-2">{team.length} {t("عضو", "members")}</span>
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              {isAr ? "لم يتم تعيين فريق للمشروع بعد" : "No team members assigned yet"}
+            </p>
+          )}
         </div>
 
-        {/* Recent Activity Timeline */}
+        {/* Project Timeline */}
         <div>
           <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-3">{t("النشاط الأخير", "Recent Activity")}</h4>
           <div className="space-y-0">
-            <div className="absolute start-[15px] top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
-            {mockActivities.map((item, _idx) => (
-              <div key={item.id} className="relative flex items-start gap-3 pb-3 last:pb-0">
-                <div className={cn("relative z-10 h-7 w-7 rounded-full flex items-center justify-center shrink-0 text-white", item.color)}>
-                  {item.icon}
-                </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{item.text}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1">
-                    <Clock className="h-2.5 w-2.5" />
-                    {new Date(item.time).toLocaleDateString(isAr ? "ar-AE" : "en-US", { day: "numeric", month: "short" })}
-                  </p>
-                </div>
+            <div className="relative flex items-start gap-3 pb-3">
+              <div className="relative z-10 h-7 w-7 rounded-full flex items-center justify-center shrink-0 text-white bg-brand-navy-500">
+                <CheckCircle2 className="h-3.5 w-3.5" />
               </div>
-            ))}
+              <div className="flex-1 min-w-0 pt-0.5">
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {isAr ? "تم إنشاء وتوثيق المشروع" : "Project initialized and logged"}
+                </p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1">
+                  <Clock className="h-2.5 w-2.5" />
+                  {new Date(project.createdAt).toLocaleDateString(isAr ? "ar-AE" : "en-US", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

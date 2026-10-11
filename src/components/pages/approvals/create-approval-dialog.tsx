@@ -21,12 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import type { CreateFormState, EntityItem } from "./types";
 import { getHashColor } from "./helpers";
-import { mockUsers } from "./constants";
+
+interface SimpleUser {
+  id: string;
+  name: string;
+  role?: string;
+}
 
 interface CreateApprovalDialogProps {
   ar: boolean;
@@ -52,6 +58,17 @@ export function CreateApprovalDialog({
   handleEntitySelect,
 }: CreateApprovalDialogProps) {
   const tAuto = useTranslations();
+
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<SimpleUser[]>({
+    queryKey: ["users-simple"],
+    queryFn: async () => {
+      const res = await fetch("/api/users-simple");
+      if (!res.ok) return [];
+      return res.json();
+    },
+    staleTime: 60 * 1000,
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
@@ -127,19 +144,28 @@ export function CreateApprovalDialog({
                 onValueChange={(v) => setCreateForm((prev) => ({ ...prev, assignedTo: v }))}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={tAuto('auto.select')} />
+                  <SelectValue placeholder={isLoadingUsers ? (ar ? "جاري التحميل..." : "Loading...") : tAuto('auto.select')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockUsers.map((u) => (
-                    <SelectItem key={u.id} value={u.name}>
-                      <div className="flex items-center gap-2">
-                        <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white", getHashColor(u.name))}>
-                          {u.name.charAt(0)}
+                  {users.length > 0 ? (
+                    users.map((u) => (
+                      <SelectItem key={u.id} value={u.name}>
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white", getHashColor(u.name))}>
+                            {u.name.charAt(0)}
+                          </div>
+                          <span>{u.name}</span>
+                          {u.role && (
+                            <span className="text-[10px] text-slate-400">({u.role})</span>
+                          )}
                         </div>
-                        {ar ? u.name : u.nameEn}
-                      </div>
-                    </SelectItem>
-                  ))}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="py-2 px-3 text-xs text-slate-400 text-center">
+                      {ar ? "لا يوجد مستخدمون متاحون" : "No users found"}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
