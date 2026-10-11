@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { IBM_Plex_Sans_Arabic, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { headers } from "next/headers";
@@ -80,10 +81,10 @@ export default async function RootLayout({
             payloads cannot read it. If the nonce is missing (e.g., during SSG), the script
             is omitted to avoid a CSP violation; the React app will re-apply direction on mount. */}
         {nonce ? (
-          <script
+          <Script
             id="lang-script"
+            strategy="beforeInteractive"
             nonce={nonce}
-            suppressHydrationWarning
             dangerouslySetInnerHTML={{
               __html: `(function(){try{var m=document.cookie.match(/(^| )blueprint-lang=([^;]+)/);var l=m?m[2]:(localStorage.getItem("blueprint-lang")||"ar");document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr"}catch(e){}})()`,
             }}
