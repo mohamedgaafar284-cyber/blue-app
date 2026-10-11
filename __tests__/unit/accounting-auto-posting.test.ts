@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { db } from '@/lib/db';
-import { AccountingService, createExpenseJournalEntry, createInvoiceJournalEntry, createPaymentJournalEntry } from '@/lib/services/accounting.service';
+import {
+  AccountingService,
+  createExpenseJournalEntry,
+  createInvoiceJournalEntry,
+  createPaymentJournalEntry,
+  reverseJournalEntriesForReference,
+} from '@/lib/services/accounting.service';
 
 describe('Accounting Service & GL Auto-Posting (M1.5 / QW1-3)', () => {
   let testOrgId = '';
@@ -136,5 +142,43 @@ describe('Accounting Service & GL Auto-Posting (M1.5 / QW1-3)', () => {
     expect(trialBalance.balancesMatch).toBe(true);
     expect(trialBalance.totalDebitSum).toBe(trialBalance.totalCreditSum);
   });
+
+  it('should create balanced reversal entries when cancelling a payment (Reversal Guard)', async () => {
+    const revTestRef = `PAY-REV-${Date.now()}`;
+    const amount = 3000;
+
+    // 1. Post original expense
+    await db.$transaction(async (tx) => {
+      await createExpenseJournalEntry(tx, testOrgId, revTestRef, 'Initial site supplies', amount, 'general', 'bank', testUserId);
+    });
+
+    // 2. Perform reversal
+    const reversed = await db.$transaction(async (tx) => {
+      return await reverseJournalEntriesForReference(tx, testOrgId, revTestRef, 'Order cancelled by supplier', testUserId);
+    });
+
+    expect(reversed).toBe(true);
+
+    // 3. Verify reversal entry exists with exact opposite debit/credit
+    const revEntry = await db.journalEntry.findFirst({
+      where: { organizationId: testOrgId, reference: `REV-${revTestRef}` },
+      include: { lines: { include: { account: true } } },
+    });
+
+    expect(revEntry).not.toBeNull();
+    const bankLine = revEntry?.lines.find(l => l.account.code === '1020');
+    const expLine = revEntry?.lines.find(l => l.account.code === '5100');
+
+    expect(bankLine).toBeDefined();
+    expect(Number(bankLine?.debit)).toBe(amount); // Debits Bank back!
+    expect(expLine).toBeDefined();
+    expect(Number(expLine?.credit)).toBe(amount); // Credits Expense back!
+
+    // Double check trial balance is still perfectly balanced
+    const tbAfter = await AccountingService.getTrialBalance(testOrgId);
+    expect(tbAfter.balancesMatch).toBe(true);
+    expect(tbAfter.totalDebitSum).toBe(tbAfter.totalCreditSum);
+  });
 });
+
 

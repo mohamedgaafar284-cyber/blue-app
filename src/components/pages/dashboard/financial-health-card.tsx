@@ -7,6 +7,7 @@ import { useNavStore } from "@/store/nav-store";
 import { useAuthStore } from "@/store/auth-store";
 import { Permission } from "@/lib/auth/types";
 import { hasPermission } from "@/lib/auth/modules/authorization";
+import { formatCurrency } from "@/lib/currency";
 
 interface FinancialSummaryData {
   totalRevenue: number;
@@ -35,6 +36,19 @@ export function FinancialHealthCard({ language }: FinancialHealthCardProps) {
     hasPermission(user.role, Permission.REPORTS_READ)
   );
 
+  const { data: settings } = useQuery<{ currency?: string }>({
+    queryKey: ["company-settings-currency"],
+    queryFn: async () => {
+      const res = await fetch("/api/settings");
+      if (!res.ok) return { currency: "AED" };
+      const json = await res.json();
+      return json.data || json;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const currency = settings?.currency || "AED";
+
   const { data, isLoading } = useQuery<FinancialSummaryData>({
     queryKey: ["finance", "summary-snapshot"],
     queryFn: async () => {
@@ -52,12 +66,9 @@ export function FinancialHealthCard({ language }: FinancialHealthCardProps) {
   if (!canViewReports) return null;
 
   const formatMoney = (val: number | undefined) => {
-    const num = val || 0;
-    return new Intl.NumberFormat(isAr ? "ar-AE" : "en-US", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(num);
+    return formatCurrency(val ?? 0, currency, language);
   };
+
 
   const isProfitable = (data?.netProfit || 0) >= 0;
 
@@ -103,7 +114,7 @@ export function FinancialHealthCard({ language }: FinancialHealthCardProps) {
               <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
             </div>
             <div className="text-lg font-bold text-slate-900 dark:text-white">
-              {formatMoney(data?.totalRevenue)} <span className="text-xs font-normal text-slate-400">AED</span>
+              {formatMoney(data?.totalRevenue)}
             </div>
             <div className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 mt-1 font-medium">
               <ArrowUpRight className="h-3 w-3" />
@@ -121,7 +132,7 @@ export function FinancialHealthCard({ language }: FinancialHealthCardProps) {
               <Wallet className="h-3.5 w-3.5 text-rose-600" />
             </div>
             <div className="text-lg font-bold text-slate-900 dark:text-white">
-              {formatMoney(data?.totalExpenses)} <span className="text-xs font-normal text-slate-400">AED</span>
+              {formatMoney(data?.totalExpenses)}
             </div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
               {isAr ? "تشغيل ورواتب ومشتريات" : "Operations & materials"}
@@ -138,10 +149,12 @@ export function FinancialHealthCard({ language }: FinancialHealthCardProps) {
               <FileText className="h-3.5 w-3.5 text-amber-600" />
             </div>
             <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
-              {formatMoney(data?.receivables)} <span className="text-xs font-normal text-slate-400">AED</span>
+              {formatMoney(data?.receivables)}
             </div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-              {isAr ? "فواتير لم تحصّل بعد" : "Uncollected invoices"}
+              {(data?.receivables ?? 0) < 0
+                ? (isAr ? "دفعات مقدمة من العملاء" : "Customer advance payments")
+                : (isAr ? "فواتير لم تحصّل بعد" : "Uncollected invoices")}
             </div>
           </div>
 
@@ -155,7 +168,7 @@ export function FinancialHealthCard({ language }: FinancialHealthCardProps) {
               <Landmark className="h-3.5 w-3.5 text-sky-600" />
             </div>
             <div className={`text-lg font-bold ${isProfitable ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-              {formatMoney(data?.netProfit)} <span className="text-xs font-normal text-slate-400">AED</span>
+              {formatMoney(data?.netProfit)}
             </div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-0.5 mt-1 font-medium">
               {isProfitable ? <ArrowUpRight className="h-3 w-3 text-emerald-600" /> : <ArrowDownRight className="h-3 w-3 text-rose-600" />}
@@ -163,6 +176,7 @@ export function FinancialHealthCard({ language }: FinancialHealthCardProps) {
             </div>
           </div>
         </div>
+
       )}
     </div>
   );
