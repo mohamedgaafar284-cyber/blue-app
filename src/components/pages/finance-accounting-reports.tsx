@@ -253,42 +253,69 @@ export default function FinanceAccountingReportsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl w-full flex overflow-x-auto h-auto gap-1">
-          <TabsTrigger value="ledger" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <BookOpen className="h-4 w-4" />
-            {t("دفتر الأستاذ", "General Ledger")}
+        <TabsList className="bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-xl w-full flex overflow-x-auto h-auto gap-1.5">
+          <TabsTrigger value="ledger" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <BookOpen className="h-4 w-4 text-emerald-600" />
+              {t("حركة الحسابات", "Account History")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("دفتر الأستاذ (GL)", "General Ledger")}</span>
           </TabsTrigger>
-          <TabsTrigger value="trial-balance" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <Scale className="h-4 w-4" />
-            {t("ميزان المراجعة", "Trial Balance")}
+          <TabsTrigger value="trial-balance" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <Scale className="h-4 w-4 text-blue-600" />
+              {t("توازن الحسابات", "Account Balance Check")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("ميزان المراجعة", "Trial Balance")}</span>
           </TabsTrigger>
-          <TabsTrigger value="income-statement" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <TrendingUp className="h-4 w-4" />
-            {t("قائمة الدخل P&L", "Profit & Loss")}
+          <TabsTrigger value="income-statement" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
+              {t("الأرباح والخسائر", "Profit & Loss Summary")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("قائمة الدخل (P&L)", "Income Statement")}</span>
           </TabsTrigger>
-          <TabsTrigger value="balance-sheet" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <Building className="h-4 w-4" />
-            {t("الميزانية العمومية", "Balance Sheet")}
+          <TabsTrigger value="balance-sheet" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <Building className="h-4 w-4 text-indigo-600" />
+              {t("المركز المالي للشركة", "Financial Position")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("الميزانية العمومية", "Balance Sheet")}</span>
           </TabsTrigger>
-          <TabsTrigger value="vat-return" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <FileSpreadsheet className="h-4 w-4" />
-            {t("الإقرار الضريبي VAT", "VAT Return")}
+          <TabsTrigger value="ar-aging" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <Scale className="h-4 w-4 text-amber-500" />
+              {t("مين مديون لنا؟", "Who Owes Us?")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("أعمار الذمم (AR)", "AR Aging")}</span>
           </TabsTrigger>
-          <TabsTrigger value="ar-aging" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <Scale className="h-4 w-4" />
-            {t("أعمار الذمم AR", "AR Aging")}
+          <TabsTrigger value="ap-aging" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <Scale className="h-4 w-4 text-rose-500" />
+              {t("إحنا مديونين لمين؟", "Who Do We Owe?")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("أعمار الديون (AP)", "AP Aging")}</span>
           </TabsTrigger>
-          <TabsTrigger value="ap-aging" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <Scale className="h-4 w-4" />
-            {t("أعمار الديون AP", "AP Aging")}
+          <TabsTrigger value="vat-return" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <FileSpreadsheet className="h-4 w-4 text-purple-600" />
+              {t("الضريبة والمستردات", "Tax & Returns")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("الإقرار الضريبي (VAT)", "VAT Return")}</span>
           </TabsTrigger>
-          <TabsTrigger value="budget-vs-actual" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <TrendingUp className="h-4 w-4" />
-            {t("الموازنة والفعلي", "Budget vs Actual")}
+          <TabsTrigger value="budget-vs-actual" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <TrendingUp className="h-4 w-4 text-teal-600" />
+              {t("المخطط مقابل الفعلي", "Budget vs Spent")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("مقارنة الموازنة", "Budget vs Actual")}</span>
           </TabsTrigger>
-          <TabsTrigger value="statement" className="rounded-lg py-2 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-            <BookOpen className="h-4 w-4" />
-            {t("كشف حساب", "Statement")}
+          <TabsTrigger value="statement" className="rounded-lg py-2 px-3 flex flex-col items-start text-xs sm:text-sm shrink-0">
+            <span className="font-semibold flex items-center gap-1.5">
+              <BookOpen className="h-4 w-4 text-sky-600" />
+              {t("كشف حساب جهة", "Entity Statement")}
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">{t("كشف حساب عميل/مورد", "Account Statement")}</span>
           </TabsTrigger>
         </TabsList>
 

@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { Permission } from "@/lib/auth/types";
 import { hasPermission } from "@/lib/auth/modules/authorization";
 import { formatCurrency } from "@/lib/currency";
+import { QuickEntryModal } from "@/components/pages/finance/quick-entry-modal";
 
 interface FinancialSummaryData {
   totalRevenue: number;
@@ -88,13 +89,17 @@ export function FinancialHealthCard({ language }: FinancialHealthCardProps) {
               : "Auto-synced from general ledger journal entries and invoices"}
           </p>
         </div>
-        <button
-          onClick={() => setCurrentPage("finance-reports")}
-          className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-        >
-          {isAr ? "عرض القوائم المالية ←" : "Financial Statements →"}
-        </button>
+        <div className="flex items-center gap-2">
+          <QuickEntryModal language={language} />
+          <button
+            onClick={() => setCurrentPage("finance-accounting-reports")}
+            className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+          >
+            {isAr ? "عرض القوائم المالية ←" : "Financial Statements →"}
+          </button>
+        </div>
       </div>
+
 
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 animate-pulse">
