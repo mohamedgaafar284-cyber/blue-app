@@ -24,6 +24,9 @@ const REFRESH_EXEMPT_ROUTES = [
   '/api/auth/logout',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/auth/ws-token',
+  '/api/auth/session',
+  '/api/auth/demo-credentials',
 ];
 
 /** Maximum number of refresh attempts before giving up */
@@ -101,8 +104,10 @@ async function attemptTokenRefresh(): Promise<boolean> {
  */
 function redirectToLogin(): void {
   if (typeof window !== 'undefined') {
-    // Use replace to avoid adding to browser history
-    window.location.replace('/dashboard');
+    // Avoid reloading if we are already on the dashboard/login page
+    if (window.location.pathname !== '/dashboard' && window.location.pathname !== '/login') {
+      window.location.replace('/dashboard');
+    }
   }
 }
 

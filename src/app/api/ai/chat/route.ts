@@ -388,7 +388,7 @@ ${contextSection}`;
               : 'AI assistant unavailable. Please add an API key for one of the providers in your .env file',
           }, { status: 503 });
         }
-        const demoText = getDemoResponse(message, language || 'ar', contextData);
+        const demoText = getDemoResponse(message, language || 'ar', contextData, companyCurrency);
         usedProvider = 'demo';
         usedModel = 'demo-fallback';
 
