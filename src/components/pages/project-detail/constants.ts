@@ -211,26 +211,6 @@ export const PIPELINE_STAGES = [
   { key: "supervision", labelAr: "الإشراف", labelEn: "Supervision", icon: ClipboardCheck },
 ];
 
-export const MOCK_TEAM = [
-  { id: "1", name: "أحمد محمد", nameEn: "Ahmed Mohamed", role: "مهندس معماري", roleEn: "Architect", status: "ACTIVE" },
-  { id: "2", name: "سارة أحمد", nameEn: "Sara Ahmed", role: "مهندسة إنشائية", roleEn: "Structural Eng.", status: "ACTIVE" },
-  { id: "3", name: "خالد علي", nameEn: "Khalid Ali", role: "مهندس كهرباء", roleEn: "Electrical Eng.", status: "IDLE" },
-  { id: "4", name: "فاطمة حسن", nameEn: "Fatma Hassan", role: "مصممة داخلي", roleEn: "Interior Designer", status: "ACTIVE" },
-];
-
-export const MOCK_ACTIVITY = [
-  { id: "1", actionAr: "تم تحديث التصميم المعماري", actionEn: "Architectural design updated", time: "2h ago", user: "أحمد محمد" },
-  { id: "2", actionAr: "تم رفع مخططات الأساسات", actionEn: "Foundation drawings uploaded", time: "5h ago", user: "سارة أحمد" },
-  { id: "3", actionAr: "تم اعتماد المرحلة الأولى", actionEn: "Phase 1 approved", time: "1d ago", user: "المدير" },
-  { id: "4", actionAr: "تم إضافة مهمة جديدة", actionEn: "New task added", time: "2d ago", user: "أحمد محمد" },
-  { id: "5", actionAr: "تم تحديث الميزانية", actionEn: "Budget updated", time: "3d ago", user: "المدير" },
-];
-
-export const MOCK_DOCUMENTS = [
-  { id: "1", nameAr: "المخطط المعماري النهائي.pdf", nameEn: "Final Architectural Plan.pdf", size: "2.4 MB", date: "2024-01-15" },
-  { id: "2", nameAr: "تقرير التربة.pdf", nameEn: "Soil Report.pdf", size: "1.1 MB", date: "2024-01-10" },
-  { id: "3", nameAr: "مخطط الأساسات.dwg", nameEn: "Foundation Plan.dwg", size: "5.2 MB", date: "2024-01-08" },
-];
 
 export const MUNICIPALITY_PREREQUISITES = [
   { id: "arch", labelAr: "المخططات المعمارية المعتمدة", labelEn: "Approved Architectural Drawings", dependsOn: "ARCHITECTURAL" },

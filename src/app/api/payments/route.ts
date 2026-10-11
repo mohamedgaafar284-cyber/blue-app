@@ -214,6 +214,7 @@ export async function POST(request: NextRequest) {
         await invalidateCache('payments');
         await invalidateCache('invoices');
         await cacheDeletePattern(`dashboard:${ctx.organizationId || 'global'}:*`);
+        await cacheDeletePattern('finance:summary:*');
 
         if (idempotencyKey) {
           const redisKey = `idempotency:payment:${ctx.userId}:${idempotencyKey}`;
@@ -287,6 +288,7 @@ export async function POST(request: NextRequest) {
     // Invalidate payment and dashboard caches after creation
     await invalidateCache('payments');
     await cacheDeletePattern(`dashboard:${ctx.organizationId || 'global'}:*`);
+    await cacheDeletePattern('finance:summary:*');
 
     if (idempotencyKey) {
       const redisKey = `idempotency:payment:${ctx.userId}:${idempotencyKey}`;

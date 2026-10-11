@@ -22,7 +22,6 @@ import {
   Star,
   Phone,
   ArrowUpRight,
-  Download,
   CheckCircle2,
   GitBranch,
   UsersRound,
@@ -33,8 +32,9 @@ import {
   PiggyBank,
   CheckSquare,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { StatCard, DepartmentProgress } from "./helpers";
-import { PIPELINE_STAGES, MOCK_TEAM, MOCK_ACTIVITY, MOCK_DOCUMENTS } from "./constants";
+import { PIPELINE_STAGES } from "./constants";
 import { getContractorCategoryLabel } from "./helpers";
 import type { ProjectData } from "./types";
 
@@ -54,6 +54,40 @@ export default function OverviewTab({
 
   const totalInvoiced = project?.invoices?.reduce((s, i) => s + Number(i.total), 0) || 0;
   const totalPaid = project?.invoices?.reduce((s, i) => s + Number(i.paidAmount), 0) || 0;
+
+  // Real activities for this project
+  const { data: projectActivities = [] } = useQuery<Array<{
+    id: string;
+    details: string;
+    createdAt: string;
+    user?: { name: string };
+  }>>({
+    queryKey: ["project-overview-activities", project.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/activity-log?projectId=${project.id}&limit=5`);
+      if (!res.ok) return [];
+      const json = await res.json();
+      return json.data || json;
+    },
+    staleTime: 60 * 1000,
+  });
+
+  // Real documents for this project
+  const { data: projectDocuments = [] } = useQuery<Array<{
+    id: string;
+    name: string;
+    fileSize?: number;
+    createdAt: string;
+  }>>({
+    queryKey: ["project-overview-documents", project.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/documents?projectId=${project.id}&limit=5`);
+      if (!res.ok) return [];
+      const json = await res.json();
+      return json.data || json;
+    },
+    staleTime: 60 * 1000,
+  });
   return (
     <div className="space-y-6">
       {/* Hero Section */}
@@ -486,37 +520,33 @@ export default function OverviewTab({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {(project.assignments.length > 0 ? project.assignments.map(a => ({ id: a.id, name: a.user?.name || "", role: a.role, status: "ACTIVE" as const })) : MOCK_TEAM).map((member) => (
-              <div key={member.id} className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all",
-                member.status === "ACTIVE" ? "bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200/50 dark:border-emerald-800/30" : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
-              )}>
-                <div className="relative">
-                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center",
-                    member.status === "ACTIVE" ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-slate-100 dark:bg-slate-800"
-                  )}>
-                    <span className={cn("text-xs font-bold", member.status === "ACTIVE" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500")}>
-                      {member.name.charAt(0).toUpperCase()}
-                    </span>
+          {project.assignments && project.assignments.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {project.assignments.map((assignment) => (
+                <div key={assignment.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200/50 dark:border-emerald-800/30">
+                  <div className="relative">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30">
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                        {(assignment.user?.name || "?").charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 bg-emerald-500" />
                   </div>
-                  <div className={cn("absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900",
-                    member.status === "ACTIVE" ? "bg-emerald-500" : "bg-slate-400"
-                  )} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{assignment.user?.name || t("مستخدم", "User")}</p>
+                    <p className="text-xs text-slate-500">{assignment.role || assignment.user?.position || t("عضو فريق", "Team Member")}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] border-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    {t("نشط", "Active")}
+                  </Badge>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{member.name}</p>
-                  <p className="text-xs text-slate-500">{member.role}</p>
-                </div>
-                <Badge variant="outline" className={cn("text-[10px] border-0", member.status === "ACTIVE"
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                  : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                )}>
-                  {member.status === "ACTIVE" ? t("نشط", "Active") : t("خامل", "Idle")}
-                </Badge>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
+              {t("لم يتم تعيين فريق لهذا المشروع بعد", "No team members assigned to this project yet")}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -531,17 +561,25 @@ export default function OverviewTab({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {MOCK_ACTIVITY.map((item) => (
-                <div key={item.id} className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-slate-700 dark:text-slate-300">{isAr ? item.actionAr : item.actionEn}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{item.user} · {item.time}</p>
+            {projectActivities.length > 0 ? (
+              <div className="space-y-3">
+                {projectActivities.map((item) => (
+                  <div key={item.id} className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-700 dark:text-slate-300">{item.details}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        {item.user?.name || t("مستخدم", "User")} · {new Date(item.createdAt).toLocaleDateString(isAr ? "ar-AE" : "en-US", { day: "numeric", month: "short" })}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
+                {t("لا توجد تحديثات مسجلة مؤخراً", "No recent activity recorded")}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -553,34 +591,41 @@ export default function OverviewTab({
                 <FileText className="h-4 w-4 text-amber-500" />
                 {t("مستندات سريعة", "Quick Documents")}
               </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-brand-navy-600 hover:text-brand-navy-700 gap-1"
-                onClick={onViewAllDocuments}
-              >
-                {t("عرض الكل", "View All")}
-                <ArrowUpRight className="h-3 w-3" />
-              </Button>
+              {onViewAllDocuments && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-brand-navy-600 hover:text-brand-navy-700 gap-1"
+                  onClick={onViewAllDocuments}
+                >
+                  {t("عرض الكل", "View All")}
+                  <ArrowUpRight className="h-3 w-3" />
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {MOCK_DOCUMENTS.map((doc) => (
-                <div key={doc.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group cursor-pointer">
-                  <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                    <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            {projectDocuments.length > 0 ? (
+              <div className="space-y-2">
+                {projectDocuments.map((doc) => (
+                  <div key={doc.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group cursor-pointer">
+                    <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                      <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{doc.name}</p>
+                      <p className="text-[10px] text-slate-400">
+                        {doc.fileSize ? `${Math.round(doc.fileSize / 1024)} KB` : "—"} · {new Date(doc.createdAt).toLocaleDateString(isAr ? "ar-AE" : "en-US", { day: "numeric", month: "short" })}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{isAr ? doc.nameAr : doc.nameEn}</p>
-                    <p className="text-[10px] text-slate-400">{doc.size} · {doc.date}</p>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Download">
-                    <Download className="h-3.5 w-3.5 text-slate-500" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
+                {t("لا توجد مستندات مرفوعة لهذا المشروع", "No documents uploaded for this project")}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
