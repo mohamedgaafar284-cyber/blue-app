@@ -172,6 +172,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     await invalidateCache('payments');
     if (existing.invoiceId) await invalidateCache('invoices');
     await cacheDeletePattern(`dashboard:${ctx.organizationId || 'global'}:*`);
+    await cacheDeletePattern(`finance:summary:*`);
 
     // Create audit log entry in ActivityLog
     // SECURITY: Use structured JSON instead of string concatenation to prevent
@@ -201,6 +202,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(updatedPayment);
   } catch (error) {
+    if (error instanceof Error && error.message === "CONCURRENT_UPDATE_ERROR") {
+      return NextResponse.json(
+        { error: "تم تحديث الدفعة بواسطة مستخدم آخر، يرجى إعادة المحاولة" },
+        { status: 409 }
+      );
+    }
     log.error("Error updating payment:", error);
     return NextResponse.json({ error: "Failed to update payment" }, { status: 500 });
   }
