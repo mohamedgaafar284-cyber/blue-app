@@ -861,6 +861,77 @@ export async function createExpenseJournalEntry(
 }
 
 /**
+ * Reverse existing journal entries for a reference (e.g. cancelled payment, voided invoice).
+ * Creates offsetting double-entry lines so the ledger history is preserved and balances match.
+ *
+ * @param tx - Prisma transaction client
+ * @param organizationId - Organization ID
+ * @param reference - The reference of the original journal entry (e.g. PAYMENT-INV-101, PAY-123456)
+ * @param reversalReason - Reason for reversal
+ * @param userId - User executing the reversal
+ * @returns boolean - true if a reversal entry was created, false if no original entry found
+ */
+export async function reverseJournalEntriesForReference(
+  tx: TransactionClient,
+  organizationId: string,
+  reference: string,
+  reversalReason: string,
+  _userId: string
+): Promise<boolean> {
+  const originalEntries = await tx.journalEntry.findMany({
+    where: {
+      organizationId,
+      reference,
+    },
+    include: {
+      lines: true,
+    },
+  });
+
+  if (!originalEntries || originalEntries.length === 0) {
+    return false;
+  }
+
+  for (const orig of originalEntries) {
+    // Avoid double-reversing
+    const alreadyReversed = await tx.journalEntry.findFirst({
+      where: {
+        organizationId,
+        reference: `REV-${orig.reference}`,
+      },
+    });
+
+    if (alreadyReversed) {
+      continue;
+    }
+
+    const revEntry = await tx.journalEntry.create({
+      data: {
+        date: new Date(),
+        reference: `REV-${orig.reference}`,
+        description: `Reversal of ${orig.reference}: ${reversalReason}`,
+        organizationId,
+      },
+    });
+
+    // Invert debits and credits
+    const revLines = orig.lines.map((l) => ({
+      journalEntryId: revEntry.id,
+      accountId: l.accountId,
+      debit: l.credit,
+      credit: l.debit,
+    }));
+
+    await tx.journalLine.createMany({
+      data: revLines,
+    });
+  }
+
+  return true;
+}
+
+/**
  * Seed default chart of accounts for a new organization.
  * Called during organization creation or setup.
  */
+

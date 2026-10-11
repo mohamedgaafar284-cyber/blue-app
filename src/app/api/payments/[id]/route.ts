@@ -8,6 +8,9 @@ import { sanitizeObject } from '@/lib/security/sanitize';
 import { requireStepUp2FA } from '@/lib/auth/step-up-2fa';
 
 import { withRateLimit, rateLimitResponse } from '@/lib/rate-limit-middleware';
+import { reverseJournalEntriesForReference } from '@/lib/services/accounting.service';
+import { invalidateCache } from '@/lib/cache/query-cache';
+import { cacheDeletePattern } from '@/lib/cache/redis';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -78,39 +81,97 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Payment not found" }, { status: 404 });
     }
 
-    // Auto-set approvedById when status transitions to APPROVED
-    const isApproving = status === 'APPROVED' && existing.status !== 'APPROVED';
-
-    // Optimistic Concurrency Control (OCC): match on existing updatedAt to prevent race conditions
-    const updateResult = await db.payment.updateMany({
-      where: { id, ...orgWhere, updatedAt: existing.updatedAt },
-      data: {
-        ...(status !== undefined && { status: status }),
-        ...(isApproving && { approvedById: ctx.userId }),
-        ...(amount !== undefined && { amount }),
-        ...(payMethod !== undefined && { payMethod: payMethod }),
-        ...(beneficiary !== undefined && { beneficiary }),
-        ...(referenceNumber !== undefined && { referenceNumber }),
-        ...(description !== undefined && { description }),
-        updatedById: ctx.userId,
-      },
-    });
-
-    if (updateResult.count === 0) {
+    // ── FINANCIAL INTEGRITY GUARD: Prevent mutating amounts on posted/approved payments ──
+    const isPosted = existing.status === 'APPROVED' || existing.status === 'COMPLETED';
+    if (isPosted && amount !== undefined && Number(amount) !== Number(existing.amount)) {
       return NextResponse.json(
-        { error: "تم تحديث الدفعة بواسطة مستخدم آخر، يرجى إعادة المحاولة" },
-        { status: 409 }
+        { error: "لا يمكن تعديل مبلغ دفعة معتمدة ومرحّلة محاسبياً. يرجى إلغاء الدفعة وإنشاء دفعة جديدة." },
+        { status: 400 }
       );
     }
 
-    // Fetch the updated payment to return in the response
-    const updatedPayment = await db.payment.findFirst({
-      where: { id, ...orgWhere },
-      include: {
-        approver: { select: { id: true, name: true } },
-        project: { select: { id: true, name: true, nameEn: true, number: true } },
-      },
+    // Auto-set approvedById when status transitions to APPROVED
+    const isApproving = status === 'APPROVED' && existing.status !== 'APPROVED';
+    const isCancelling = status === 'CANCELLED' && existing.status !== 'CANCELLED';
+
+    // Execute update and optional GL reversal atomically in transaction
+    const updatedPayment = await db.$transaction(async (tx) => {
+      // Optimistic Concurrency Control (OCC): match on existing updatedAt to prevent race conditions
+      const updateResult = await tx.payment.updateMany({
+        where: { id, ...orgWhere, updatedAt: existing.updatedAt },
+        data: {
+          ...(status !== undefined && { status: status }),
+          ...(isApproving && { approvedById: ctx.userId }),
+          ...(amount !== undefined && { amount }),
+          ...(payMethod !== undefined && { payMethod: payMethod }),
+          ...(beneficiary !== undefined && { beneficiary }),
+          ...(referenceNumber !== undefined && { referenceNumber }),
+          ...(description !== undefined && { description }),
+          updatedById: ctx.userId,
+        },
+      });
+
+      if (updateResult.count === 0) {
+        throw new Error("CONCURRENT_UPDATE_ERROR");
+      }
+
+      // If cancelling an already approved/posted payment, reverse its GL entry atomically!
+      if (isCancelling && ctx.organizationId) {
+        const paymentRef = existing.voucherNumber || `PAY-${existing.id.slice(-6)}`;
+        // Try reversing both direct payment ref and invoice payment ref
+        await reverseJournalEntriesForReference(
+          tx,
+          ctx.organizationId,
+          paymentRef,
+          `Cancelled payment ${paymentRef}`,
+          ctx.userId
+        );
+
+        if (existing.invoiceId) {
+          const invoice = await tx.invoice.findUnique({
+            where: { id: existing.invoiceId },
+            select: { number: true },
+          });
+          if (invoice) {
+            await reverseJournalEntriesForReference(
+              tx,
+              ctx.organizationId,
+              `PAYMENT-${invoice.number}`,
+              `Cancelled payment for invoice ${invoice.number}`,
+              ctx.userId
+            );
+
+            // Recredit invoice remaining balance
+            const paidReduction = Number(existing.amount);
+            await tx.invoice.update({
+              where: { id: existing.invoiceId },
+              data: {
+                paidAmount: { decrement: paidReduction },
+                remaining: { increment: paidReduction },
+                status: 'PARTIALLY_PAID',
+              },
+            });
+          }
+        }
+      }
+
+      return await tx.payment.findFirst({
+        where: { id, ...orgWhere },
+        include: {
+          approver: { select: { id: true, name: true } },
+          project: { select: { id: true, name: true, nameEn: true, number: true } },
+        },
+      });
     });
+
+    if (!updatedPayment) {
+      return NextResponse.json({ error: "Failed to retrieve updated payment" }, { status: 500 });
+    }
+
+    // Invalidate caches
+    await invalidateCache('payments');
+    if (existing.invoiceId) await invalidateCache('invoices');
+    await cacheDeletePattern(`dashboard:${ctx.organizationId || 'global'}:*`);
 
     // Create audit log entry in ActivityLog
     // SECURITY: Use structured JSON instead of string concatenation to prevent
