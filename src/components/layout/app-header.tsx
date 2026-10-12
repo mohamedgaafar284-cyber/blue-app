@@ -22,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Search, Globe, Settings, LogOut, HelpCircle } from "lucide-react";
+import { Search, Globe, Settings, LogOut, HelpCircle, ExternalLink } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import NotificationDropdown from "@/components/notification-dropdown";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -45,8 +45,9 @@ function AppHeader() {
 
   const pageTitle = pageTitleMap[currentPage] || { ar: "لوحة التحكم", en: "Dashboard" };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = "/";
   };
 
   // Keyboard shortcut for search (Ctrl+K)
@@ -217,6 +218,10 @@ function AppHeader() {
             <DropdownMenuItem className="cursor-pointer" onClick={() => useNavStore.getState().setCurrentPage("settings")}>
               <Settings className="me-2 h-4 w-4" />
               {t("settings")}
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => window.open("/", "_blank")}>
+              <ExternalLink className="me-2 h-4 w-4" />
+              {isAr ? "زيارة الموقع الرئيسي" : "Visit Website"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600" onClick={handleLogout}>

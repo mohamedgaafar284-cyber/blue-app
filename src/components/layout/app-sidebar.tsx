@@ -31,6 +31,7 @@ import {
   UserPlus, BookOpen, Plus, CheckCircle2, TrendingUp, TrendingDown, Wallet, Wind,
   Headphones, Calendar, BookMarked, Search, Bell, User, Settings,
   FolderTree, FileSpreadsheet, FileText, Target,
+  ExternalLink, Globe,
   type LucideIcon
 } from "lucide-react";
 import SidebarStats from "@/components/layout/sidebar-stats";
@@ -239,11 +240,16 @@ function AppSidebar() {
   return (
     <Sidebar side={sidebarSide} collapsible="icon" className="border-slate-200/60 dark:border-slate-700/40 sidebar-enhanced">
       <SidebarHeader className="p-3 pb-2">
-        <div className={cn(
-          "flex items-center gap-3 px-2 py-1.5",
-          state === "collapsed" && "justify-center px-0"
-        )}>
-          <LogoImage size={38} className="shrink-0 shadow-md shadow-brand-navy-500/20 rounded-lg" />
+        <button
+          type="button"
+          onClick={() => setCurrentPage("dashboard")}
+          className={cn(
+            "flex items-center gap-3 px-2 py-1.5 rounded-lg text-start transition-all hover:bg-slate-100 dark:hover:bg-slate-800/60 w-full group cursor-pointer",
+            state === "collapsed" && "justify-center px-0"
+          )}
+          title={isAr ? "الانتقال للوحة التحكم" : "Go to Dashboard"}
+        >
+          <LogoImage size={38} className="shrink-0 shadow-md shadow-brand-navy-500/20 rounded-lg group-hover:scale-105 transition-transform" />
           {state !== "collapsed" && (
             <div className="flex flex-col">
               <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-none">
@@ -254,7 +260,7 @@ function AppSidebar() {
               </span>
             </div>
           )}
-        </div>
+        </button>
       </SidebarHeader>
 
       <Separator className="mx-3 w-auto opacity-60" />
@@ -320,6 +326,20 @@ function AppSidebar() {
       <SidebarFooter className="p-3 pt-1">
         {state !== "collapsed" && <SidebarQuickStats />}
         {state !== "collapsed" && <SidebarStats />}
+        {state !== "collapsed" && (
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg border border-slate-200/70 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:text-brand-navy-600 dark:hover:text-cyan-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 transition-colors mt-1"
+          >
+            <span className="flex items-center gap-2">
+              <Globe className="h-3.5 w-3.5 text-brand-navy-500" />
+              <span>{isAr ? "الموقع الرئيسي" : "Public Website"}</span>
+            </span>
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </a>
+        )}
         <Separator className="my-2 opacity-60" />
         <div className={cn(
           "sidebar-user-card flex items-center gap-3 rounded-lg px-2.5 py-2 transition-all duration-200",
