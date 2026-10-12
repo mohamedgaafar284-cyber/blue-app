@@ -250,7 +250,7 @@ const allNavItems: NavItem[] = [
       },
       {
         id: "meetings",
-        icon: "Calendar",
+        icon: "Video",
         labelAr: "الاجتماعات",
         labelEn: "Meetings",
         roles: allRoles,

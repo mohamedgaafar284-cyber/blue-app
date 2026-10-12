@@ -10,6 +10,7 @@ import {
   CreditCard, FileText, Users, Shield,
   BarChart2, MapPin, Send, BookOpen,
   Calendar, BellRing, Activity, Search,
+  Video, UsersRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavStore } from "@/store/nav-store";
@@ -48,7 +49,7 @@ const moreMenuItems: MoreMenuItem[] = [
   { pageId: "site-visits", icon: MapPin, labelAr: "زيارات الموقع", labelEn: "Site Visits" },
   { pageId: "site-diary", icon: BookOpen, labelAr: "اليومية الميدانية", labelEn: "Site Diary" },
   { pageId: "approvals", icon: Shield, labelAr: "الاعتمادات والموافقات", labelEn: "Approvals" },
-  { pageId: "meetings", icon: Calendar, labelAr: "الاجتماعات", labelEn: "Meetings" },
+  { pageId: "meetings", icon: Video, labelAr: "الاجتماعات", labelEn: "Meetings" },
   { pageId: "transmittals", icon: Send, labelAr: "الإحالات", labelEn: "Transmittals" },
   { pageId: "risks", icon: Shield, labelAr: "المخاطر", labelEn: "Risks" },
   { pageId: "reports", icon: BarChart2, labelAr: "التقارير", labelEn: "Reports" },
@@ -91,12 +92,19 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
 
   // ─── Filter visible bottom nav items based on user role ─────────
   const visibleBottomItems = useMemo(() => {
+    const ROLE_FALLBACKS: Record<string, { pageId: string; icon: typeof LayoutDashboard; labelAr: string; labelEn: string }> = {
+      HR: { pageId: "employees", icon: UsersRound, labelAr: "الموظفين", labelEn: "Employees" },
+      DRAFTSMAN: { pageId: "documents", icon: FileText, labelAr: "المستندات", labelEn: "Documents" },
+      VIEWER: { pageId: "reports", icon: BarChart2, labelAr: "التقارير", labelEn: "Reports" },
+      ACCOUNTANT: { pageId: "clients", icon: Users, labelAr: "العملاء", labelEn: "Clients" },
+      SECRETARY: { pageId: "clients", icon: Users, labelAr: "العملاء", labelEn: "Clients" },
+    };
+
     return bottomNavItems.map((item) => {
       if (item.pageId === "field-portal") {
         const canAccessField = user ? hasPagePermission(user.role, "field-portal") : false;
-        if (!canAccessField) {
-          // Fallback for roles like ACCOUNTANT, SECRETARY, VIEWER, HR
-          return { pageId: "clients", icon: Users, labelAr: "العملاء", labelEn: "Clients" };
+        if (!canAccessField && user) {
+          return ROLE_FALLBACKS[user.role.toUpperCase()] || { pageId: "search", icon: Search, labelAr: "البحث", labelEn: "Search" };
         }
       }
       return item;
@@ -293,6 +301,8 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
                   {moreMenuItems
                     .filter((item) => {
                       if (!user) return false;
+                      // Don't duplicate items that are already in the bottom bar
+                      if (visibleBottomItems.some((b) => b.pageId === item.pageId)) return false;
                       const path = `/dashboard/${item.pageId}`;
                       if (PUBLIC_DASHBOARD_ROUTES.includes(path) || PUBLIC_DASHBOARD_ROUTES.includes(item.pageId)) return true;
                       return hasPagePermission(user.role, item.pageId);

@@ -31,7 +31,7 @@ import {
   UserPlus, BookOpen, Plus, CheckCircle2, TrendingUp, TrendingDown, Wallet, Wind,
   Headphones, Calendar, BookMarked, Search, Bell, User, Settings,
   FolderTree, FileSpreadsheet, FileText, Target,
-  ExternalLink, Globe,
+  ExternalLink, Globe, Video,
   type LucideIcon
 } from "lucide-react";
 import SidebarStats from "@/components/layout/sidebar-stats";
@@ -79,6 +79,7 @@ const iconMap: Record<string, LucideIcon> = {
   FileSpreadsheet,
   FileText,
   Target,
+  Video,
 };
 
 function getIcon(iconName: string): LucideIcon {
