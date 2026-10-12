@@ -42,19 +42,19 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
         return;
       }
 
-      // Quick Creation Shortcuts (Ctrl + Shift + Key or Ctrl + Key when not typing)
-      if ((e.metaKey || e.ctrlKey) && !isInputFocused) {
-        if (e.key === "n" || e.key === "N") {
+      // Quick Creation Shortcuts (Alt + Key when not typing - prevents browser tab/window hijacking)
+      if (e.altKey && !isInputFocused) {
+        if (e.key === "n" || e.key === "N" || e.code === "KeyN") {
           e.preventDefault();
           setCurrentPage("projects");
           return;
         }
-        if (e.key === "t" || e.key === "T") {
+        if (e.key === "t" || e.key === "T" || e.code === "KeyT") {
           e.preventDefault();
           setCurrentPage("tasks");
           return;
         }
-        if (e.key === "i" || e.key === "I") {
+        if (e.key === "i" || e.key === "I" || e.code === "KeyI") {
           e.preventDefault();
           setCurrentPage("financial-invoices");
           return;
@@ -71,9 +71,10 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
           "5": "financial-invoices",
           "6": "calendar",
         };
-        if (numberKeyMap[e.key]) {
+        const targetPage = numberKeyMap[e.key];
+        if (targetPage) {
           e.preventDefault();
-          setCurrentPage(numberKeyMap[e.key]);
+          setCurrentPage(targetPage);
           return;
         }
       }

@@ -2,7 +2,7 @@
 
 
 import { useTranslations } from 'next-intl';
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, FolderKanban, List,
@@ -89,15 +89,29 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
   });
   const notifCount = notifData?.count ?? 0;
 
+  // ─── Filter visible bottom nav items based on user role ─────────
+  const visibleBottomItems = useMemo(() => {
+    return bottomNavItems.map((item) => {
+      if (item.pageId === "field-portal") {
+        const canAccessField = user ? hasPagePermission(user.role, "field-portal") : false;
+        if (!canAccessField) {
+          // Fallback for roles like ACCOUNTANT, SECRETARY, VIEWER, HR
+          return { pageId: "clients", icon: Users, labelAr: "العملاء", labelEn: "Clients" };
+        }
+      }
+      return item;
+    });
+  }, [user]);
+
   // ─── Compute active index for the floating indicator ────────────
-  const activeIndex = bottomNavItems.findIndex(
+  const activeIndex = visibleBottomItems.findIndex(
     (item) => currentPage === item.pageId || currentPage.startsWith(item.pageId + "-")
   );
 
   // ─── Sliding floating indicator ─────────────────────────────────
   const updateIndicator = useCallback(() => {
     if (!navRef.current || activeIndex === -1) return;
-    const btn = buttonRefs.current.get(bottomNavItems[activeIndex]?.pageId ?? "");
+    const btn = buttonRefs.current.get(visibleBottomItems[activeIndex]?.pageId ?? "");
     if (!btn) return;
 
     const navRect = navRef.current.getBoundingClientRect();
@@ -108,7 +122,7 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
       width: 24,
       opacity: 1,
     });
-  }, [activeIndex]);
+  }, [activeIndex, visibleBottomItems]);
 
   useEffect(() => {
     // Small delay to let layout settle after render
@@ -168,7 +182,7 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
         </div>
 
         <div ref={navRef} className="flex items-center justify-around px-1 py-1.5">
-          {bottomNavItems.map((item) => {
+          {visibleBottomItems.map((item) => {
             const Icon = item.icon;
             const isActive =
               currentPage === item.pageId ||
@@ -279,7 +293,8 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
                   {moreMenuItems
                     .filter((item) => {
                       if (!user) return false;
-                      if (PUBLIC_DASHBOARD_ROUTES.includes(item.pageId)) return true;
+                      const path = `/dashboard/${item.pageId}`;
+                      if (PUBLIC_DASHBOARD_ROUTES.includes(path) || PUBLIC_DASHBOARD_ROUTES.includes(item.pageId)) return true;
                       return hasPagePermission(user.role, item.pageId);
                     })
                     .map((item) => {

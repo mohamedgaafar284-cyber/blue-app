@@ -117,9 +117,9 @@ const faqs = [
 // ===== Keyboard Shortcuts Reference =====
 const keyboardShortcuts = [
   { keys: ["Ctrl", "K"], descAr: "فتح البحث", descEn: "Open Search" },
-  { keys: ["Ctrl", "N"], descAr: "مشروع جديد", descEn: "New Project" },
-  { keys: ["Ctrl", "T"], descAr: "مهمة جديدة", descEn: "New Task" },
-  { keys: ["Ctrl", "I"], descAr: "فاتورة جديدة", descEn: "New Invoice" },
+  { keys: ["Alt", "N"], descAr: "مشروع جديد", descEn: "New Project" },
+  { keys: ["Alt", "T"], descAr: "مهمة جديدة", descEn: "New Task" },
+  { keys: ["Alt", "I"], descAr: "فاتورة جديدة", descEn: "New Invoice" },
   { keys: ["Escape"], descAr: "إغلاق النافذة", descEn: "Close Dialog" },
   { keys: ["?"], descAr: "اختصارات لوحة المفاتيح", descEn: "Keyboard Shortcuts" },
   { keys: ["1"], descAr: "لوحة التحكم", descEn: "Dashboard" },

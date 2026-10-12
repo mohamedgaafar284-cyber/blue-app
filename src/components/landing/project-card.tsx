@@ -29,7 +29,19 @@ export function ProjectCard({
 
   return (
     <>
-      <div onClick={() => setOpen(true)} className="block focus:outline-none">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+        aria-label={t(project.title, project.titleEn)}
+        className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy-500 rounded-2xl"
+      >
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
