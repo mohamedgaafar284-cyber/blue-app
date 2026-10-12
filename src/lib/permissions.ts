@@ -370,6 +370,14 @@ const ROUTE_ROLE_MATRIX: Record<string, Role[]> = {
   "/dashboard/automations": ["ADMIN"],
   "/dashboard/activity-log": ["ADMIN"],
   "/dashboard/features-hub": ["ADMIN", "MANAGER"],
+
+  // Common APIs & Utilities (Available to all authenticated roles)
+  "/dashboard/dashboard": allRoles,
+  "/dashboard/users-simple": allRoles,
+  "/dashboard/user/onboarding": allRoles,
+  "/dashboard/feature-flags/check": allRoles,
+  "/dashboard/ai": allRoles,
+  "/dashboard/demo/reset": allRoles,
   
   // Clients & CRM
   "/dashboard/clients": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ACCOUNTANT", "SECRETARY"],
