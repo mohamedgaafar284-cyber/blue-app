@@ -242,9 +242,9 @@ export default function HelpPage({ language, projectId }: { language: "ar" | "en
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { icon: BookMarked, titleAr: "قاعدة المعرفة", titleEn: "Knowledge Base", descAr: "مقالات ودليل شامل", descEn: "Articles & comprehensive guide", color: "text-brand-navy-500", bg: "bg-brand-navy-50 dark:bg-brand-navy-500/10", onClick: navigateToKnowledge },
-          { icon: Book, titleAr: "الدليل الشامل", titleEn: "User Guide", descAr: "تعلم جميع الميزات", descEn: "Learn all features", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", onClick: undefined },
-          { icon: MessageCircle, titleAr: "المجتمع", titleEn: "Community", descAr: "اطرح سؤالك", descEn: "Ask your question", color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-500/10", onClick: undefined },
-          { icon: Mail, titleAr: "تواصل معنا", titleEn: "Contact Us", descAr: "دعم مباشر", descEn: "Direct support", color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10", onClick: undefined },
+          { icon: Book, titleAr: "الدليل الشامل", titleEn: "User Guide", descAr: "جولة تعليمية تفاعلية", descEn: "Interactive system tour", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", onClick: () => window.dispatchEvent(new CustomEvent('restart-blueprint-tour')) },
+          { icon: MessageCircle, titleAr: "المساعد الذكي", titleEn: "AI Assistant", descAr: "اطرح سؤالك على الذكاء الاصطناعي", descEn: "Ask questions to AI", color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-500/10", onClick: () => setCurrentPage("ai-assistant") },
+          { icon: Mail, titleAr: "تواصل معنا", titleEn: "Contact Us", descAr: "support@blueprint.ae", descEn: "Direct email support", color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10", onClick: () => { window.open("mailto:support@blueprint.ae?subject=Blueprint%20ERP%20Support", "_blank"); } },
         ].map((item) => (
           <Card
             key={item.titleEn}

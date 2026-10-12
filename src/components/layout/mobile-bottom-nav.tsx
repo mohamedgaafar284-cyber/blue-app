@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavStore } from "@/store/nav-store";
+import { useAuthStore } from "@/store/auth-store";
+import { hasPagePermission, PUBLIC_DASHBOARD_ROUTES } from "@/lib/permissions";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -61,6 +63,7 @@ const moreMenuItems: MoreMenuItem[] = [
 export default function MobileBottomNav({ language }: { language: "ar" | "en" }) {
   const tAuto = useTranslations();
   const isAr = language === "ar";
+  const { user } = useAuthStore();
   const { currentPage, setCurrentPage } = useNavStore();
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [pressedId, setPressedId] = useState<string | null>(null);
@@ -273,9 +276,15 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
               </div>
               <ScrollArea className="h-[calc(100vh-3.5rem)]">
                 <div className="p-2 space-y-1">
-                  {moreMenuItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = currentPage === item.pageId;
+                  {moreMenuItems
+                    .filter((item) => {
+                      if (!user) return false;
+                      if (PUBLIC_DASHBOARD_ROUTES.includes(item.pageId)) return true;
+                      return hasPagePermission(user.role, item.pageId);
+                    })
+                    .map((item) => {
+                      const Icon = item.icon;
+                      const isActive = currentPage === item.pageId;
 
                     return (
                       <button
