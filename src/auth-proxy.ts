@@ -29,6 +29,7 @@ const PUBLIC_API_ROUTES = [
   '/api/auth/verify-email', '/api/auth/resend-verification',
   '/api/auth/2fa/verify', // Only the verify endpoint is public (uses blue_2fa_temp cookie)
   '/api/auth/ws-token', '/api/auth/refresh',
+  '/api/auth/logout', '/api/auth/2fa', '/api/auth/me', '/api/auth/verify-turnstile',
   '/api/auth/google', '/api/auth/google/callback', // Google OAuth social login
   '/api/auth/microsoft', '/api/auth/microsoft/callback', // Microsoft OAuth social login
   '/api/auth/setup-complete', // One-time setup token verification (no JWT yet)
@@ -43,7 +44,7 @@ const CSRF_EXEMPT_PATHS = [
   '/api/stripe/webhook', '/api/health', '/api/auth/login',
   '/api/auth/register', '/api/auth/forgot-password',
   '/api/auth/reset-password', '/api/auth/verify-email', '/api/auth/resend-verification',
-  '/api/auth/2fa/verify',
+  '/api/auth/2fa/verify', '/api/auth/verify-turnstile',
   '/api/auth/refresh', '/api/auth/ws-token',
   '/api/quote-requests', '/api/cron/cleanup', '/api/public/stats',
   '/api/auth/google', '/api/auth/google/callback', // Google OAuth social login
