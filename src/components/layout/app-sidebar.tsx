@@ -129,8 +129,8 @@ function SidebarQuickStats() {
 
 
 // ===== NAV SECTION HELPERS =====
-const MAIN_NAV_IDS = ["dashboard", "field-portal", "clients", "projects", "contractors"];
-const BUSINESS_NAV_IDS = ["finance", "employees"];
+const MAIN_NAV_IDS = ["dashboard", "field-portal", "clients", "projects", "contractors", "documents"];
+const BUSINESS_NAV_IDS = ["finance", "reports", "employees"];
 const TOOLS_NAV_IDS = ["help", "features-hub"];
 const SYSTEM_NAV_IDS = ["admin"];
 

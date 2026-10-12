@@ -122,6 +122,15 @@ const allNavItems: NavItem[] = [
     roles: ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   },
 
+  // ───── Documents (المستندات) ─────
+  {
+    id: "documents",
+    icon: "FileText",
+    labelAr: "المستندات",
+    labelEn: "Documents",
+    roles: ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "SECRETARY"],
+  },
+
   // ───── 5. Finance (قائمة فرعية - الوحيدة المحتاجة sub-menu) ─────
   {
     id: "finance",
@@ -196,6 +205,15 @@ const allNavItems: NavItem[] = [
     ],
   },
 
+  // ───── Reports (التقارير العامة) ─────
+  {
+    id: "reports",
+    icon: "BarChart3",
+    labelAr: "التقارير",
+    labelEn: "Reports",
+    roles: ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "ACCOUNTANT", "HR", "VIEWER"],
+  },
+
   // ───── 6. Employees (صفحة واحدة بتابات: قائمة + حضور + إجازات + أعباء) ─────
   {
     id: "employees",
@@ -254,20 +272,6 @@ const allNavItems: NavItem[] = [
         labelAr: "الاجتماعات",
         labelEn: "Meetings",
         roles: allRoles,
-      },
-      {
-        id: "documents",
-        icon: "FileText",
-        labelAr: "المستندات",
-        labelEn: "Documents",
-        roles: ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "SECRETARY"],
-      },
-      {
-        id: "reports",
-        icon: "BarChart3",
-        labelAr: "التقارير",
-        labelEn: "Reports",
-        roles: ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "ACCOUNTANT", "HR", "VIEWER"],
       },
       {
         id: "api-docs",
@@ -378,6 +382,8 @@ const ROUTE_ROLE_MATRIX: Record<string, Role[]> = {
   
   // Projects & Technical
   "/dashboard/projects": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "SECRETARY"],
+  "/dashboard/projects-simple": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "ACCOUNTANT", "SECRETARY", "HR", "VIEWER"],
+  "/api/projects-simple": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "ACCOUNTANT", "SECRETARY", "HR", "VIEWER"],
   "/dashboard/contractors": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/gantt": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/contracts": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ACCOUNTANT"],
