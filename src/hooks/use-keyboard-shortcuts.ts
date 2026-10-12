@@ -42,6 +42,43 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
         return;
       }
 
+      // Quick Creation Shortcuts (Alt + Key when not typing - prevents browser tab/window hijacking)
+      if (e.altKey && !isInputFocused) {
+        if (e.key === "n" || e.key === "N" || e.code === "KeyN") {
+          e.preventDefault();
+          setCurrentPage("projects");
+          return;
+        }
+        if (e.key === "t" || e.key === "T" || e.code === "KeyT") {
+          e.preventDefault();
+          setCurrentPage("tasks");
+          return;
+        }
+        if (e.key === "i" || e.key === "I" || e.code === "KeyI") {
+          e.preventDefault();
+          setCurrentPage("financial-invoices");
+          return;
+        }
+      }
+
+      // Number Navigation Shortcuts (1-6) when not typing
+      if (!isInputFocused && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const numberKeyMap: Record<string, string> = {
+          "1": "dashboard",
+          "2": "projects",
+          "3": "tasks",
+          "4": "clients",
+          "5": "financial-invoices",
+          "6": "calendar",
+        };
+        const targetPage = numberKeyMap[e.key];
+        if (targetPage) {
+          e.preventDefault();
+          setCurrentPage(targetPage);
+          return;
+        }
+      }
+
       // Escape: Close current view / go back to dashboard
       // Only fires when NOT in an input (except when search is open)
       if (e.key === "Escape") {

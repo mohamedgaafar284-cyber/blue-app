@@ -219,7 +219,7 @@ function AppHeader() {
               <Settings className="me-2 h-4 w-4" />
               {t("settings")}
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer" onClick={() => window.open("/", "_blank")}>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => window.open("/", "_blank", "noopener,noreferrer")}>
               <ExternalLink className="me-2 h-4 w-4" />
               {isAr ? "زيارة الموقع الرئيسي" : "Visit Website"}
             </DropdownMenuItem>

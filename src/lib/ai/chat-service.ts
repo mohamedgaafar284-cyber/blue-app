@@ -940,12 +940,12 @@ export function getDemoResponse(message: string, language: string, contextData: 
 
   // Financial & Ledger Live Analysis (QW7)
   if (/فلوس|محصل|تحصيل|إيراد|دخل|مصروف|أرباح|خسائر|دفتر|أستاذ|ميزانية|فاتور|ديون|مديون|money|revenue|expense|profit|loss|receivable|payable|invoice|ledger/.test(lower)) {
-    const fin = contextData.financial as Record<string, any> | undefined;
+    const fin = contextData.financial as Record<string, unknown> | undefined;
 
     if (fin) {
-      const rev = fin.totalRevenue ?? 0;
-      const outstanding = fin.outstandingTotal ?? 0;
-      const overdueList = Array.isArray(fin.overdueInvoices) ? fin.overdueInvoices : [];
+      const rev = (fin.totalRevenue as number) ?? 0;
+      const outstanding = (fin.outstandingTotal as number) ?? 0;
+      const overdueList = Array.isArray(fin.overdueInvoices) ? (fin.overdueInvoices as Array<Record<string, unknown>>) : [];
 
       if (isAr) {
         let resp = `💼 **التقرير المالي الذكي المباشر:**\n\n`;
@@ -954,7 +954,7 @@ export function getDemoResponse(message: string, language: string, contextData: 
 
         if (overdueList.length > 0) {
           resp += `\n⚠️ **تنبيه فواتير متأخرة التحصيل (${overdueList.length}):**\n`;
-          overdueList.slice(0, 3).forEach((inv: any) => {
+          overdueList.slice(0, 3).forEach((inv) => {
             resp += `- فاتورة **${inv.number}** للعميل (${inv.clientName || 'غير محدد'}): المتبقي \`${Number(inv.remaining).toLocaleString()} ${currency}\`\n`;
           });
         } else {
@@ -968,7 +968,7 @@ export function getDemoResponse(message: string, language: string, contextData: 
         resp += `• **Outstanding Receivables:** \`${Number(outstanding).toLocaleString()} ${currency}\`\n`;
         if (overdueList.length > 0) {
           resp += `\n⚠️ **Overdue Invoices Alert (${overdueList.length}):**\n`;
-          overdueList.slice(0, 3).forEach((inv: any) => {
+          overdueList.slice(0, 3).forEach((inv) => {
             resp += `- Invoice **${inv.number}** (${inv.clientName || 'N/A'}): \`${Number(inv.remaining).toLocaleString()} ${currency}\` remaining\n`;
           });
         }

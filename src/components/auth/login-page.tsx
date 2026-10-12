@@ -26,7 +26,6 @@ import {
   Lock,
   ChevronLeft,
   ArrowRight,
-  ArrowLeft,
   Home,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";

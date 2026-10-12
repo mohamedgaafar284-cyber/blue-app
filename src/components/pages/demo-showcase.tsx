@@ -329,13 +329,21 @@ export default function DemoShowcase({ language }: { language: 'ar' | 'en' }) {
                 </p>
               </div>
             </div>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors"
-            >
-              {isAr ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-              {isAr ? 'الذهاب للوحة التحكم' : 'Go to Dashboard'}
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 bg-white text-sm font-medium hover:bg-slate-50 transition-colors"
+              >
+                {isAr ? 'الموقع الرئيسي' : 'Home Website'}
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors"
+              >
+                {isAr ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                {isAr ? 'الذهاب للوحة التحكم' : 'Go to Dashboard'}
+              </Link>
+            </div>
           </div>
         </div>
       </header>

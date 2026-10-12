@@ -242,6 +242,20 @@ const allNavItems: NavItem[] = [
         roles: allRoles,
       },
       {
+        id: "notifications",
+        icon: "BellRing",
+        labelAr: "الإشعارات",
+        labelEn: "Notifications",
+        roles: allRoles,
+      },
+      {
+        id: "meetings",
+        icon: "Calendar",
+        labelAr: "الاجتماعات",
+        labelEn: "Meetings",
+        roles: allRoles,
+      },
+      {
         id: "api-docs",
         icon: "BookOpen",
         labelAr: "توثيق API",
