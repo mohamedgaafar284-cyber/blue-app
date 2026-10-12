@@ -73,7 +73,7 @@ export function getQueue(name: QueueName): Queue {
 
   const connection = getSharedRedisConnection();
   const queue = new Queue(name, {
-    connection,
+    connection: connection as any,
     ...DEFAULT_QUEUE_OPTIONS,
   });
 
@@ -146,7 +146,7 @@ export async function startWorker(
   const connection = getSharedRedisConnection();
 
   const worker = new Worker(queueName, processor, {
-    connection,
+    connection: connection as any,
     concurrency,
     limiter: {
       max: 10, // Max 10 jobs

@@ -204,6 +204,9 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
         role: data.role,
         avatar: data.avatar,
       });
+
+      // Navigate to dashboard
+      window.location.href = "/dashboard";
     } catch {
       setError(t("errors.connection"));
     } finally {
@@ -235,6 +238,8 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
         role: userData.role,
         avatar: userData.avatar,
       });
+
+      window.location.href = "/dashboard";
     } catch {
       setError(t("errors.connection"));
     } finally {

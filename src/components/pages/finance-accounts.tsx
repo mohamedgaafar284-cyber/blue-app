@@ -226,7 +226,7 @@ export default function FinanceAccountsPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="type" className="required">{t("نوع الحساب", "Account Type")}</Label>
-                    <Select value={type} onValueChange={(val: AccountType) => { setType(val); setParentAccountId("NONE"); }}>
+                    <Select value={type} onValueChange={(val) => { setType(val as AccountType); setParentAccountId("NONE"); }}>
                       <SelectTrigger id="type">
                         <SelectValue />
                       </SelectTrigger>

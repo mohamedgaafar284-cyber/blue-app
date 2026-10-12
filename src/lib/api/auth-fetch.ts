@@ -104,9 +104,13 @@ async function attemptTokenRefresh(): Promise<boolean> {
  */
 function redirectToLogin(): void {
   if (typeof window !== 'undefined') {
-    // Avoid reloading if we are already on the dashboard/login page
-    if (window.location.pathname !== '/dashboard' && window.location.pathname !== '/login') {
-      window.location.replace('/dashboard');
+    // Only redirect if the user is attempting to access a protected area,
+    // NEVER redirect away from public pages (landing, about, services, etc.)
+    const publicPages = ['/', '/login', '/services', '/calculator', '/quote', '/portal', '/about', '/demo-showcase'];
+    const currentPath = window.location.pathname;
+
+    if (!publicPages.includes(currentPath) && currentPath !== '/dashboard') {
+      window.location.replace('/login');
     }
   }
 }

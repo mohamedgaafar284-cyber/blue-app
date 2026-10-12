@@ -52,7 +52,7 @@ export default function PreferencesStep({ data, onChange, onNext, onBack }: Pref
           </Label>
           <Select
             value={data.language}
-            onValueChange={(value: "ar" | "en") => onChange({ language: value })}
+            onValueChange={(value) => onChange({ language: value as "ar" | "en" })}
           >
             <SelectTrigger className="w-full" aria-label={t("اختر اللغة", "Select language")}>
               <div className="flex items-center gap-2">

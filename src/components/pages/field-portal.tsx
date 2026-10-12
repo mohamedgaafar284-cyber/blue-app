@@ -818,7 +818,7 @@ export default function FieldPortalPage({ language }: FieldPortalProps) {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">{isAr ? "درجة الخطورة:" : "Severity:"}</Label>
-                <Select value={defectSeverity} onValueChange={(val: "LOW" | "NORMAL" | "HIGH" | "CRITICAL") => setDefectSeverity(val)}>
+                <Select value={defectSeverity} onValueChange={(val) => setDefectSeverity(val as "LOW" | "NORMAL" | "HIGH" | "CRITICAL")}>
                   <SelectTrigger className="text-xs mt-1">
                     <SelectValue />
                   </SelectTrigger>

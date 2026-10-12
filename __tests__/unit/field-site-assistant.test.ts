@@ -7,7 +7,7 @@ import { db } from '@/lib/db';
 process.env.JWT_SECRET = 'test-secret-at-least-32-characters-long!';
 
 // 1. Isolate test from real external AI providers and ZAI config
-const mockCallZaiDirect = jest.fn<any>();
+const mockCallZaiDirect = jest.fn<(...args: any[]) => Promise<any>>();
 jest.mock('@/lib/ai/chat-service', () => ({
   callZaiDirect: (...args: any[]) => mockCallZaiDirect(...args),
 }));
