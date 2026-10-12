@@ -118,9 +118,14 @@ export default function LandingPageClient() {
               </button>
             </nav>
 
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-3">
+              <Link href="/login">
+                <Button variant="ghost" className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${scrolled ? 'text-[#0F2557] hover:bg-slate-100' : 'text-white hover:bg-white/10'}`}>
+                  {t("دخول النظام", "ERP Login")}
+                </Button>
+              </Link>
               <Link href="/quote">
-                <Button className="bg-gradient-to-r from-[#0F2557] to-[#1A4A8B] hover:from-[#1A4A8B] hover:to-[#2563EB] text-white rounded-full px-8 py-3 text-sm font-semibold tracking-wide shadow-[0_4px_20px_rgba(15,37,87,0.4)] transition-all duration-300 hover:scale-105 hover:shadow-[0_6px_30px_rgba(15,37,87,0.5)]">
+                <Button className="bg-gradient-to-r from-[#0F2557] to-[#1A4A8B] hover:from-[#1A4A8B] hover:to-[#2563EB] text-white rounded-full px-6 py-2.5 text-sm font-semibold tracking-wide shadow-[0_4px_20px_rgba(15,37,87,0.4)] transition-all duration-300 hover:scale-105 hover:shadow-[0_6px_30px_rgba(15,37,87,0.5)]">
                   {t("ابدأ مشروعك", "Start Your Project")}
                 </Button>
               </Link>
@@ -155,6 +160,11 @@ export default function LandingPageClient() {
                     {t(link.label, link.labelEn)}
                   </Link>
                 ))}
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full mt-2 border-white/30 text-white hover:bg-white/10 rounded-full">
+                    {t("دخول النظام", "ERP Login")}
+                  </Button>
+                </Link>
                 <Link href="/quote" onClick={() => setMobileMenuOpen(false)}>
                   <Button className="w-full mt-2 bg-white text-[#0B1D3A] rounded-full">
                     {t("ابدأ مشروعك", "Start Your Project")}
