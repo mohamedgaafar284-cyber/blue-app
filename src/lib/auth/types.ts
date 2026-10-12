@@ -309,7 +309,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     Permission.PURCHASE_ORDER_CREATE, Permission.PURCHASE_ORDER_READ, Permission.PURCHASE_ORDER_UPDATE,
     Permission.SUPPLIER_READ,
     Permission.CHANGE_ORDER_READ,
-    Permission.APPROVAL_READ,
+    Permission.APPROVAL_READ, Permission.APPROVAL_CREATE,
     Permission.PROPOSAL_READ,
     Permission.EMPLOYEE_READ,
     // Notification + Search permissions for Accountant

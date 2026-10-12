@@ -10,7 +10,7 @@ import {
   CreditCard, FileText, Users, Shield,
   BarChart2, MapPin, Send, BookOpen,
   Calendar, BellRing, Activity, Search,
-  Video, UsersRound,
+  Video, UsersRound, Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavStore } from "@/store/nav-store";
@@ -100,11 +100,23 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
       SECRETARY: { pageId: "clients", icon: Users, labelAr: "العملاء", labelEn: "Clients" },
     };
 
+    const PROJECTS_FALLBACKS: Record<string, { pageId: string; icon: typeof LayoutDashboard; labelAr: string; labelEn: string }> = {
+      ACCOUNTANT: { pageId: "finance", icon: Wallet, labelAr: "المالية", labelEn: "Finance" },
+      HR: { pageId: "employees", icon: UsersRound, labelAr: "الموظفين", labelEn: "Employees" },
+      VIEWER: { pageId: "reports", icon: BarChart2, labelAr: "التقارير", labelEn: "Reports" },
+    };
+
     return bottomNavItems.map((item) => {
       if (item.pageId === "field-portal") {
         const canAccessField = user ? hasPagePermission(user.role, "field-portal") : false;
         if (!canAccessField && user) {
           return ROLE_FALLBACKS[user.role.toUpperCase()] || { pageId: "search", icon: Search, labelAr: "البحث", labelEn: "Search" };
+        }
+      }
+      if (item.pageId === "projects") {
+        const canAccessProjects = user ? hasPagePermission(user.role, "projects") : false;
+        if (!canAccessProjects && user) {
+          return PROJECTS_FALLBACKS[user.role.toUpperCase()] || { pageId: "reports", icon: BarChart2, labelAr: "التقارير", labelEn: "Reports" };
         }
       }
       return item;

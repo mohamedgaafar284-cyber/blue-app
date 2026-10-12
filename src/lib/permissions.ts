@@ -392,6 +392,7 @@ const ROUTE_ROLE_MATRIX: Record<string, Role[]> = {
   "/dashboard/projects": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "SECRETARY"],
   "/dashboard/projects-simple": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "ACCOUNTANT", "SECRETARY", "HR", "VIEWER"],
   "/api/projects-simple": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "ACCOUNTANT", "SECRETARY", "HR", "VIEWER"],
+  "/dashboard/project-assignments": allRoles,
   "/dashboard/contractors": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/gantt": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/contracts": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ACCOUNTANT"],
@@ -399,6 +400,8 @@ const ROUTE_ROLE_MATRIX: Record<string, Role[]> = {
   "/dashboard/change-orders": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/defects": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
   "/dashboard/design-management": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN"],
+  "/dashboard/design-drawings": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN"],
+  "/dashboard/design-phases": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN"],
   "/dashboard/documents": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "DRAFTSMAN", "SECRETARY"],
   "/dashboard/reports": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "ACCOUNTANT", "HR", "VIEWER"],
   "/dashboard/equipment": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER"],
@@ -434,7 +437,10 @@ const ROUTE_ROLE_MATRIX: Record<string, Role[]> = {
   "/dashboard/leave": ["ADMIN", "MANAGER", "HR"],
   "/dashboard/timesheets": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ENGINEER", "HR"],
   "/dashboard/workload": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "HR"],
-  "/dashboard/approvals": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "HR"],
+  "/dashboard/approvals": ["ADMIN", "MANAGER", "PROJECT_MANAGER", "ACCOUNTANT", "HR"],
+
+  // External Integrations & Notifications
+  "/dashboard/whatsapp": ["ADMIN", "MANAGER"],
 };
 
 export function isRouteAllowedForRole(pathname: string, role: string): boolean {
