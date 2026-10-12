@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Link from "next/link";
 import {
   Loader2,
   Eye,
@@ -24,6 +25,9 @@ import {
   Mail,
   Lock,
   ChevronLeft,
+  ArrowRight,
+  ArrowLeft,
+  Home,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useToast } from "@/hooks/use-toast";
@@ -370,8 +374,8 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
         <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full">
           {/* Logo & Brand */}
           <div className="animate-fade-in">
-            <div className="flex items-center gap-3 mb-2">
-              <LogoImage size={48} className="border border-white/40" />
+            <Link href="/" className="inline-flex items-center gap-3 mb-2 group hover:opacity-95 transition-opacity" title={isAr ? "العودة إلى الصفحة الرئيسية" : "Back to Home"}>
+              <LogoImage size={48} className="border border-white/40 group-hover:scale-105 transition-transform" />
               <div>
                 <h1 className="text-2xl font-bold text-white tracking-tight">
                   BluePrint
@@ -380,7 +384,7 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
                   {t("subtitle")}
                 </p>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Feature Highlights - Center */}
@@ -478,13 +482,31 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
             {/* ===== Login Card with Animated Gradient Border + Frosted Glass ===== */}
             <div className="login-gradient-border rounded-2xl">
               <div className="rounded-2xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-6 sm:p-8 space-y-5 shadow-xl shadow-slate-900/5 dark:shadow-black/20">
+                {/* Back to Home Link */}
+                <div className="flex items-center justify-between pb-1">
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-brand-navy-600 dark:text-slate-400 dark:hover:text-cyan-400 transition-colors group"
+                  >
+                    <ArrowRight className="h-3.5 w-3.5 rtl:rotate-0 ltr:rotate-180 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5 transition-transform" />
+                    <span>{isAr ? "العودة إلى الموقع الرئيسي" : "Back to Home"}</span>
+                  </Link>
+                  <Link
+                    href="/"
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    title={isAr ? "الصفحة الرئيسية" : "Home"}
+                  >
+                    <Home className="h-4 w-4" />
+                  </Link>
+                </div>
+
                 {/* Logo for mobile / top branding */}
                 <div className="text-center space-y-3">
-                  <div className="inline-flex relative">
-                    <div className="absolute inset-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-navy-500 to-cyan-500 blur-lg opacity-30" />
-                    <LogoImage size={64} className="relative shadow-lg shadow-brand-navy-500/20" />
+                  <Link href="/" className="inline-flex relative group" title={isAr ? "العودة إلى الصفحة الرئيسية" : "Back to Home"}>
+                    <div className="absolute inset-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-navy-500 to-cyan-500 blur-lg opacity-30 group-hover:opacity-50 transition-opacity" />
+                    <LogoImage size={64} className="relative shadow-lg shadow-brand-navy-500/20 group-hover:scale-105 transition-transform" />
                     <div className="absolute -bottom-0.5 -end-0.5 w-5 h-5 rounded-full bg-cyan-400 border-2 border-white dark:border-slate-950" />
-                  </div>
+                  </Link>
                   <div>
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                       {requires2FA

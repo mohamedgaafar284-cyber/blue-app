@@ -86,7 +86,7 @@ export default function LandingPageClient() {
   return (
     <div className="min-h-screen bg-[#F8FAFF]" dir={language === "ar" ? "rtl" : "ltr"} style={{ fontFamily: "var(--font-ibm-plex-arabic), var(--font-jakarta), system-ui, sans-serif" }}>
       {/* ===== HEADER ===== */}
-      <header className={`fixed ${process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'top-10' : 'top-0'} left-0 right-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 shadow-md backdrop-blur-sm' : 'bg-transparent'}`}>
+      <header className={`fixed top-[var(--demo-banner-height,0px)] left-0 right-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 shadow-md backdrop-blur-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <Link href="/" className="flex items-center gap-3">
