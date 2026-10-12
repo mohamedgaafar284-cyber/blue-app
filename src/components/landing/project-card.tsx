@@ -45,19 +45,19 @@ export function ProjectCard({
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
+          viewport={{ once: true, amount: 0.15 }}
           transition={{ delay: index * 0.1, duration: 0.6, ease: "easeOut" as const }}
-          className="group relative overflow-hidden rounded-2xl cursor-pointer"
+          className="group relative overflow-hidden rounded-2xl cursor-pointer touch-manipulation select-none active:scale-[0.98] transition-transform duration-150"
         >
-          <div className="relative aspect-[4/3] overflow-hidden">
+          <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden">
             <Image
               src={project.image}
               alt={t(project.title, project.titleEn)}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0B1D3A]/90 via-[#0B1D3A]/40 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0B1D3A]/90 via-[#0B1D3A]/40 to-transparent opacity-70 group-hover:opacity-85 transition-opacity duration-300" />
             
             <div className="absolute top-4 start-4">
               <span className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-[#0B1D3A]">

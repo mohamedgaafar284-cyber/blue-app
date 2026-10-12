@@ -73,7 +73,7 @@ export function HeroVideoBackground() {
   }, []);
 
   return (
-    <motion.div ref={ref} className="absolute inset-0 overflow-hidden">
+    <motion.div ref={ref} className="absolute inset-0 overflow-hidden pointer-events-none">
       <motion.div style={{ y, opacity }} className="absolute inset-0">
         <video
           ref={videoRef}
