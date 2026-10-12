@@ -10,6 +10,7 @@ import { log } from '@/lib/logger';
 import { getEngineeringContext } from '@/lib/ai/engineering-knowledge';
 import { withRateLimit, rateLimitResponse } from '@/lib/rate-limit-middleware';
 import { getCompanyCurrency } from '@/lib/currency-server';
+import { isDemoMode } from '@/lib/demo-credentials';
 
 import {
   getZAI,
@@ -379,8 +380,7 @@ ${contextSection}`;
 
       // Tier 4: Demo mode fallback
       if (!providerToUse) {
-        const isDemo = process.env.DEMO_MODE !== 'false' && process.env.NODE_ENV !== 'production';
-        if (!isDemo) {
+        if (!isDemoMode()) {
           return NextResponse.json({
             error: 'AI_SERVICE_UNAVAILABLE',
             message: language === 'ar'
