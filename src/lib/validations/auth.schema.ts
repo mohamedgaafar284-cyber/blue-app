@@ -39,6 +39,30 @@ export const registerSchema = z.object({
 
 export type RegisterData = z.infer<typeof registerSchema>;
 
+/**
+ * First-run setup wizard (creates the very first ADMIN account).
+ * SECURITY: the role is NOT accepted from the client — it is always ADMIN
+ * server-side, and the endpoint refuses to run once any user exists.
+ */
+export const setupAdminSchema = z.object({
+  organizationName: z.string()
+    .min(2, 'اسم الشركة يجب أن يكون حرفين على الأقل')
+    .max(200, 'اسم الشركة طويل جداً'),
+  taxNumber: z.string().max(50).optional(),
+  adminName: z.string()
+    .min(2, 'الاسم يجب أن يكون حرفين على الأقل')
+    .max(100, 'الاسم طويل جداً'),
+  adminEmail: z.string()
+    .min(1, 'البريد الإلكتروني مطلوب')
+    .email('صيغة البريد الإلكتروني غير صحيحة')
+    .max(200),
+  adminPassword: z.string()
+    .min(12, 'كلمة مرور المدير يجب أن تكون 12 خانة على الأقل')
+    .max(128, 'كلمة المرور طويلة جداً'),
+});
+
+export type SetupAdminData = z.infer<typeof setupAdminSchema>;
+
 export const forgotPasswordSchema = z.object({
   email: z.string()
     .min(1, 'البريد الإلكتروني مطلوب')

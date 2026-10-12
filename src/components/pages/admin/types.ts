@@ -40,6 +40,9 @@ export interface NewUserData {
   department: string;
   position: string;
   phone: string;
+  // Optional: when empty, the server generates a temporary password and
+  // returns it ONCE in the creation response (shown in TempPasswordDialog)
+  password?: string;
 }
 
 export const roleLabels: Record<string, { ar: string; en: string }> = {

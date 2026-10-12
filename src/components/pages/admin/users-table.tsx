@@ -1,6 +1,7 @@
 "use client";
 
 
+import { useState } from "react";
 import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,13 +31,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Users, Search, Edit, Trash2, MoreHorizontal } from "lucide-react";
+import { Users, Search, Edit, Trash2, MoreHorizontal, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMutationHeaders } from "@/lib/csrf-client";
 import { extractErrorMessage } from "@/lib/api/fetch-client";
 import { useToast } from "@/hooks/use-toast";
 import { type UserRecord, type NewUserData, roleLabels, getAvatarColor, formatTime } from "./types";
 import { UserForm } from "./user-form";
+import { TempPasswordDialog } from "./temp-password-dialog";
 
 interface UsersTableProps {
   isAr: boolean;
@@ -64,6 +66,8 @@ export function UsersTable({
   const tAuto = useTranslations();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
+  const [tempPasswordUser, setTempPasswordUser] = useState({ name: "", email: "" });
 
   const filteredUsers = users.filter(
     (u) =>
@@ -98,6 +102,27 @@ export function UsersTable({
         return;
       }
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+
+  // Admin-side password reset — generates a temp password shown ONCE.
+  // Solves the "employee forgot password + no SMTP" lockout scenario.
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ id }: { id: string; name: string; email: string }) =>
+      fetch(`/api/users/${id}`, {
+        method: "POST",
+        headers: getMutationHeaders(),
+        body: JSON.stringify({ action: "reset-password" }),
+      }).then((r) => r.json()),
+    onSuccess: (data, variables) => {
+      if (data.error) {
+        toast({ title: tAuto('auto.error'), description: extractErrorMessage(data.error, tAuto('auto.anErrorOccurred')), variant: "destructive" });
+        return;
+      }
+      if (data.temporaryPassword) {
+        setTempPassword(data.temporaryPassword);
+        setTempPasswordUser({ name: variables.name, email: variables.email });
+      }
     },
   });
 
@@ -244,6 +269,15 @@ export function UsersTable({
                               {tAuto('auto.edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              className="gap-2"
+                              onClick={() =>
+                                resetPasswordMutation.mutate({ id: user.id, name: user.name, email: user.email })
+                              }
+                            >
+                              <KeyRound className="h-3.5 w-3.5" />
+                              {isAr ? "إعادة تعيين كلمة المرور" : "Reset Password"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               className="gap-2 text-red-600 dark:text-red-400"
                               onClick={() => deleteUserMutation.mutate(user.id)}
                             >
@@ -261,6 +295,16 @@ export function UsersTable({
           )}
         </CardContent>
       </Card>
+
+      {/* One-time temporary password display (after admin reset) */}
+      <TempPasswordDialog
+        isAr={isAr}
+        open={!!tempPassword}
+        onClose={() => setTempPassword(null)}
+        password={tempPassword || ""}
+        userName={tempPasswordUser.name}
+        userEmail={tempPasswordUser.email}
+      />
     </TabsContent>
   );
 }
