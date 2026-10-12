@@ -102,8 +102,8 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
 
     const PROJECTS_FALLBACKS: Record<string, { pageId: string; icon: typeof LayoutDashboard; labelAr: string; labelEn: string }> = {
       ACCOUNTANT: { pageId: "finance", icon: Wallet, labelAr: "المالية", labelEn: "Finance" },
-      HR: { pageId: "employees", icon: UsersRound, labelAr: "الموظفين", labelEn: "Employees" },
-      VIEWER: { pageId: "reports", icon: BarChart2, labelAr: "التقارير", labelEn: "Reports" },
+      HR: { pageId: "meetings", icon: Video, labelAr: "الاجتماعات", labelEn: "Meetings" },
+      VIEWER: { pageId: "knowledge", icon: BookOpen, labelAr: "قاعدة المعرفة", labelEn: "Knowledge" },
     };
 
     return bottomNavItems.map((item) => {

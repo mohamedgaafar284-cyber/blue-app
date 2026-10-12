@@ -180,7 +180,7 @@ export default function LandingPageClient() {
       <section className="relative pt-20 min-h-screen overflow-hidden">
         <HeroVideoBackground />
 
-        <div className="absolute inset-0 opacity-[0.03]">
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="hero-grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -194,12 +194,12 @@ export default function LandingPageClient() {
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.05, 0.1, 0.05] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-20 -start-20 w-96 h-96 rounded-full bg-blue-500/15 blur-3xl"
+          className="absolute top-20 -start-20 w-96 h-96 rounded-full bg-blue-500/15 blur-3xl pointer-events-none"
         />
         <motion.div
           animate={{ scale: [1, 1.3, 1], opacity: [0.05, 0.1, 0.05] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute bottom-10 -end-20 w-96 h-96 rounded-full bg-[#1A4A8B]/20 blur-3xl"
+          className="absolute bottom-10 -end-20 w-96 h-96 rounded-full bg-[#1A4A8B]/20 blur-3xl pointer-events-none"
         />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
