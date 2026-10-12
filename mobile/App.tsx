@@ -31,6 +31,17 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
 
+  const loadLocalProjects = async () => {
+    try {
+      const cached = await getCachedProjects();
+      setProjects(cached);
+      const unsynced = await getUnsyncedVisits();
+      setOfflineCount(unsynced.length);
+    } catch (_e) {
+      console.error('Failed to load local DB cache', _e);
+    }
+  };
+
   // Load initial session & local offline database cache
   useEffect(() => {
     async function checkSession() {
@@ -43,17 +54,6 @@ export default function App() {
     }
     checkSession();
   }, []);
-
-  const loadLocalProjects = async () => {
-    try {
-      const cached = await getCachedProjects();
-      setProjects(cached);
-      const unsynced = await getUnsyncedVisits();
-      setOfflineCount(unsynced.length);
-    } catch (_e) {
-      console.error('Failed to load local DB cache', _e);
-    }
-  };
 
   // Mock Login Handler (stores simulated JWT token)
   const handleLogin = async () => {

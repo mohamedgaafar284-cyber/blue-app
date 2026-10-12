@@ -73,6 +73,7 @@ export function getQueue(name: QueueName): Queue {
 
   const connection = getSharedRedisConnection();
   const queue = new Queue(name, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     connection: connection as any,
     ...DEFAULT_QUEUE_OPTIONS,
   });
@@ -146,6 +147,7 @@ export async function startWorker(
   const connection = getSharedRedisConnection();
 
   const worker = new Worker(queueName, processor, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     connection: connection as any,
     concurrency,
     limiter: {
