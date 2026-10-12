@@ -35,6 +35,7 @@ export default function AdminPanel({ language: lang }: Props) {
     department: "",
     position: "",
     phone: "",
+    password: "",
   });
   const [userSearch, setUserSearch] = useState("");
   const [activityFilter, setActivityFilter] = useState("all");

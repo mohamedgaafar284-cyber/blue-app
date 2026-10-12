@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -113,6 +114,27 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
   const [featureIndex, setFeatureIndex] = useState(0);
   const [requires2FA, setRequires2FA] = useState(false);
   const [showGoogleButton, setShowGoogleButton] = useState(false);
+  const [setupNeeded, setSetupNeeded] = useState(false);
+  const router = useRouter();
+
+  // First-run detection: with an EMPTY database the login form can never
+  // succeed — instead of a dead end, send the user to the setup wizard so a
+  // non-technical owner can create the first ADMIN account from the browser.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/auth/setup-status', { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : { setupNeeded: false }))
+      .then((data) => {
+        if (data.setupNeeded) {
+          setSetupNeeded(true);
+          router.replace('/setup');
+        }
+      })
+      .catch(() => {
+        /* DB/app unreachable — leave the login form as-is */
+      });
+    return () => controller.abort();
+  }, [router]);
 
   // Read env var after hydration to avoid SSR mismatch
   useEffect(() => {
@@ -615,6 +637,24 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
                             {t("forgotPassword")}
                           </button>
                         </div>
+                        {setupNeeded && (
+                          <div className="mb-3 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5 text-xs">
+                            <p className="font-medium text-amber-800 dark:text-amber-300">
+                              {isAr ? "🚀 أول مرة تشغّل النظام؟" : "🚀 First time running the system?"}
+                            </p>
+                            <p className="text-amber-700 dark:text-amber-400 mt-0.5">
+                              {isAr
+                                ? "لا يوجد أي حساب بعد. أنشئ حساب المدير العام من صفحة الإعداد — بدون أي أوامر برمجية."
+                                : "No account exists yet. Create the admin account from the setup page — no terminal commands."}
+                            </p>
+                            <a
+                              href="/setup"
+                              className="inline-flex items-center gap-1 mt-1.5 font-medium text-amber-900 dark:text-amber-300 hover:underline"
+                            >
+                              {isAr ? "الذهاب إلى صفحة الإعداد ←" : "Go to setup page →"}
+                            </a>
+                          </div>
+                        )}
                         <div className="relative">
                           <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input

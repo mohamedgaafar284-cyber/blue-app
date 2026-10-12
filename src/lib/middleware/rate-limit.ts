@@ -81,6 +81,7 @@ export function classifyRateLimitTier(pathname: string): RateLimitTier | null {
     pathname === '/api/auth/register' ||
     pathname === '/api/auth/forgot-password' ||
     pathname === '/api/auth/reset-password' ||
+    pathname === '/api/auth/setup-admin' || // Creates the first ADMIN — tightest limiter
     pathname === '/api/profile/delete-account' ||
     pathname === '/api/profile/password' ||
     pathname === '/api/demo/reset'

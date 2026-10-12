@@ -30,6 +30,9 @@ const PUBLIC_API_ROUTES = [
   '/api/auth/2fa/verify', // Only the verify endpoint is public (uses blue_2fa_temp cookie)
   '/api/auth/ws-token', '/api/auth/refresh',
   '/api/auth/logout', '/api/auth/2fa', '/api/auth/me', '/api/auth/verify-turnstile',
+  // First-run setup wizard (no JWT exists yet — endpoint is fail-closed:
+  // it refuses to create anything once any user exists, see setup-admin/route.ts)
+  '/api/auth/setup-status', '/api/auth/setup-admin',
   '/api/auth/google', '/api/auth/google/callback', // Google OAuth social login
   '/api/auth/microsoft', '/api/auth/microsoft/callback', // Microsoft OAuth social login
   '/api/auth/setup-complete', // One-time setup token verification (no JWT yet)
@@ -46,6 +49,8 @@ const CSRF_EXEMPT_PATHS = [
   '/api/auth/reset-password', '/api/auth/verify-email', '/api/auth/resend-verification',
   '/api/auth/2fa/verify', '/api/auth/verify-turnstile',
   '/api/auth/refresh', '/api/auth/ws-token',
+  // First-run setup: the POST fires before any session/CSRF cookie exists
+  '/api/auth/setup-admin',
   '/api/quote-requests', '/api/cron/cleanup', '/api/public/stats',
   '/api/auth/google', '/api/auth/google/callback', // Google OAuth social login
   '/api/auth/microsoft', '/api/auth/microsoft/callback', // Microsoft OAuth social login
@@ -57,6 +62,8 @@ const PUBLIC_PAGE_ROUTES = [
   '/', '/services', '/calculator', '/quote', '/portal', '/about',
   '/forgot-password', '/reset-password', '/verify-email', '/2fa-setup',
   '/login', '/setup-complete',
+  // First-run setup wizard (auto-redirects to /login once setup is done)
+  '/setup',
   // /demo-showcase is the public features showcase page — must be
   // reachable without authentication so it can be used in presentations
   // to non-logged-in viewers.

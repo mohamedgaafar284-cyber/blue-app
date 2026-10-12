@@ -12,7 +12,7 @@ import { handleApiErrorWithLogging as handleApiError } from '@/lib/api-error';
 import { forbiddenResponse } from '@/app/api/utils/response';
 import { UserRole } from '@prisma/client';
 import { z } from 'zod';
-import * as crypto from 'crypto';
+import { generateTempPassword } from '@/lib/auth/temp-password';
 
 // Zod schema for user creation
 const userCreateSchema = z.object({
@@ -131,8 +131,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Always hash the password with bcrypt before storing
-    const hashedPassword = await hash(password || crypto.randomUUID(), 12);
+    // Always hash the password with bcrypt before storing.
+    // UX FIX: when no password is provided, generate a READABLE temporary
+    // password and return it to the admin ONCE in this response. The old
+    // fallback was `crypto.randomUUID()` — a password nobody ever saw and
+    // that was never emailed, which permanently locked the new user out
+    // (production has no SMTP guarantee for "forgot password").
+    let temporaryPassword: string | undefined;
+    const plainPassword = password || (temporaryPassword = generateTempPassword());
+    const hashedPassword = await hash(plainPassword, 12);
 
     const user = await db.user.create({
       data: {
@@ -167,7 +174,19 @@ export async function POST(request: NextRequest) {
 
     log.info('User created', { userId: user.id, email: user.email, role: user.role, createdBy: ctx.userId });
 
-    return NextResponse.json(user, { status: 201 });
+    // temporaryPassword is included ONLY when the system generated it —
+    // it is shown once to the creating admin and never stored in plaintext.
+    return NextResponse.json(
+      {
+        ...user,
+        ...(temporaryPassword && {
+          temporaryPassword,
+          passwordNotice: 'كلمة مرور مؤقتة تم توليدها تلقائياً — انسخها الآن، لن تظهر مرة أخرى. سلّمها للموظف واطلب منه تغييرها من الملف الشخصي.',
+          passwordNoticeEn: 'Auto-generated temporary password — copy it now, it will NOT be shown again. Hand it to the employee and ask them to change it from their profile.',
+        }),
+      },
+      { status: 201 }
+    );
   } catch (error: unknown) {
     log.error('Error creating user:', error);
     return handleApiError(error, 'Users POST');
