@@ -173,10 +173,12 @@ export async function proxy(request: NextRequest) {
     };
   }
 
+  const isBearerAuth = request.headers.get('authorization')?.startsWith('Bearer ');
   if (
     pathname.startsWith('/api/') &&
     ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) &&
-    !isCsrfExempt(pathname)
+    !isCsrfExempt(pathname) &&
+    !isBearerAuth
   ) {
     const csrfToken = request.headers.get('X-CSRF-Token');
     const cookieCsrf = request.cookies.get('csrf_token')?.value;
@@ -399,7 +401,7 @@ export async function proxy(request: NextRequest) {
       response.cookies.set('csrf_token', csrfToken, {
         path: '/',
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.COOKIE_SECURE === 'false' ? false : process.env.NODE_ENV === 'production',
         // SECURITY: SameSite=Strict prevents the CSRF cookie from being sent on
         // cross-site requests (including top-level navigations from external sites).
         // This is safe for the CSRF token because:

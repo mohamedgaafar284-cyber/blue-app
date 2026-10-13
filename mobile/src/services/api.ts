@@ -16,6 +16,27 @@ export async function removeAuthToken() {
   await SecureStore.deleteItemAsync('jwt_token');
 }
 
+export async function loginWithApi(email: string, password: string): Promise<string> {
+  const response = await fetch(`${BACKEND_API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Login failed');
+  }
+
+  const data = await response.json();
+  if (!data.token) {
+    throw new Error('No authentication token returned');
+  }
+
+  await setAuthToken(data.token);
+  return data.token;
+}
+
 // Fetch active projects and cache them locally
 export async function fetchAndCacheProjects(): Promise<CachedProject[]> {
   const token = await getAuthToken();

@@ -17,6 +17,7 @@ import {
   generateAuthToken,
   generateDbRefreshToken,
   getAuthCookieOptions,
+  isCookieSecure,
 } from '@/lib/auth/token-utils';
 
 /** Number of failed login attempts before account lockout */
@@ -336,7 +337,7 @@ export async function POST(request: Request) {
         path: '/',
         maxAge: 5 * 60,
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isCookieSecure(),
         sameSite: 'lax',
       });
 
@@ -360,6 +361,7 @@ export async function POST(request: Request) {
 
     // Build the response — role is normalized to lowercase for client
     const response = NextResponse.json({
+      token, // Expose JWT token for native mobile apps and Bearer API clients
       id: user.id,
       email: user.email,
       name: user.name ?? "",

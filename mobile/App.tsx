@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { getCachedProjects, saveOfflineSiteVisit, getUnsyncedVisits, CachedProject } from './src/services/db';
-import { setAuthToken, fetchAndCacheProjects, syncOfflineData, getAuthToken, removeAuthToken } from './src/services/api';
+import { fetchAndCacheProjects, syncOfflineData, getAuthToken, removeAuthToken, loginWithApi } from './src/services/api';
 
 export default function App() {
   // Navigation & Auth States
@@ -55,7 +55,7 @@ export default function App() {
     checkSession();
   }, []);
 
-  // Mock Login Handler (stores simulated JWT token)
+  // Login Handler (authenticates with API and caches JWT token)
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('خطأ / Error', 'الرجاء إدخال البريد الإلكتروني وكلمة المرور / Please enter credentials');
@@ -63,21 +63,19 @@ export default function App() {
     }
 
     setIsLoading(true);
-    setTimeout(async () => {
-      try {
-        await setAuthToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mockToken');
-        setIsAuthenticated(true);
-        setCurrentScreen('dashboard');
-        
-        // Mock default projects to database cache
-        await fetchAndCacheProjects().catch(() => {});
-        await loadLocalProjects();
-      } catch (_e) {
-        Alert.alert('فشل الدخول / Login Failed', 'عذراً، حدث خطأ أثناء الاتصال / Connection error');
-      } finally {
-        setIsLoading(false);
-      }
-    }, 1500);
+    try {
+      await loginWithApi(email, password);
+      setIsAuthenticated(true);
+      setCurrentScreen('dashboard');
+      
+      await fetchAndCacheProjects().catch(() => {});
+      await loadLocalProjects();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'عذراً، حدث خطأ أثناء الاتصال / Connection error';
+      Alert.alert('فشل الدخول / Login Failed', msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Sign out handler
