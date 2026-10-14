@@ -3,14 +3,15 @@
 import { useEffect } from "react";
 import { initAuthFetch } from "@/lib/api/auth-fetch";
 import { initAuthStore } from "@/store/auth-store";
+import { safeRandomUUID } from "@/lib/utils";
 
 const CSRF_COOKIE_NAME = 'csrf_token';
 
 /**
- * Generate a random CSRF token (client-side, crypto.randomUUID)
+ * Generate a random CSRF token (client-side, safe for both HTTPS and HTTP)
  */
 function generateCsrfToken(): string {
-  return crypto.randomUUID().replace(/-/g, '');
+  return safeRandomUUID().replace(/-/g, '');
 }
 
 /**
