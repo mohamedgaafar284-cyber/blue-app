@@ -32,7 +32,7 @@ export function InvoicePrintDialog({
     <>
       {/* Print Invoice Dialog */}
       <Dialog open={!!printInvoice} onOpenChange={(open) => { if (!open) onClose(); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Printer className="h-5 w-5 text-brand-navy-500" />

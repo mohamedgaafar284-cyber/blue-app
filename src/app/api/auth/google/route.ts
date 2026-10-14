@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import { log } from '@/lib/logger';
+import { isCookieSecure } from '@/lib/auth/token-utils';
 
 /**
  * GET /api/auth/google
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       path: '/',
       maxAge: 10 * 60, // 10 minutes
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isCookieSecure(),
       sameSite: 'lax',
     });
 
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
       path: '/',
       maxAge: 10 * 60, // 10 minutes
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isCookieSecure(),
       sameSite: 'lax',
     });
 

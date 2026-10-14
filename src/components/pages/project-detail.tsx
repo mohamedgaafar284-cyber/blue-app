@@ -443,7 +443,7 @@ export default function ProjectDetail({ language }: ProjectDetailProps) {
 
       {/* Edit Project Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("تعديل تفاصيل المشروع", "Edit Project Details")}</DialogTitle>
             <DialogDescription>

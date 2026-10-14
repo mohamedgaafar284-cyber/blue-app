@@ -42,7 +42,7 @@ export function CommissionFormDialog({ language, open, onOpenChange, users, proj
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onOpenChange(false); setFormData(emptyForm); } }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{tAuto('auto.newCommission')}</DialogTitle>
           <DialogDescription>{tAuto('auto.addANewCommissionForEmployee')}</DialogDescription>
@@ -137,7 +137,7 @@ export function ReferralFormDialog({ language, open, onOpenChange, users, projec
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onOpenChange(false); setFormData(emptyForm); } }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{tAuto('auto.newReferral')}</DialogTitle>
           <DialogDescription>{tAuto('auto.addANewClientReferral')}</DialogDescription>
@@ -243,7 +243,7 @@ export function CampaignFormDialog({ language, open, onOpenChange, editId, onEdi
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onOpenChange(false); setFormData(emptyForm); onEditIdChange(null); } }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editId ? (tAuto('auto.editCampaign')) : (tAuto('auto.newCampaign'))}</DialogTitle>
           <DialogDescription>{editId ? (tAuto('auto.updateCampaignDetails')) : (tAuto('auto.addANewMarketingCampaign'))}</DialogDescription>

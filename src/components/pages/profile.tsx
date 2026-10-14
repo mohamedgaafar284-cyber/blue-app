@@ -628,7 +628,7 @@ export default function ProfilePage({ language }: { language: "ar" | "en" }) {
 
           {/* Export Confirmation Dialog */}
           <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
-            <DialogContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <DialogContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-slate-900 dark:text-white">
                   {tAuto('auto.confirmDataExport')}

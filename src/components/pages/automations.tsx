@@ -260,7 +260,7 @@ export default function AutomationsPage({ language }: Props) {
               {tAuto('auto.newAutomation')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md" dir={isAr ? 'rtl' : 'ltr'}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'}>
             <DialogHeader>
               <DialogTitle>{tAuto('auto.createNewAutomation')}</DialogTitle>
             </DialogHeader>

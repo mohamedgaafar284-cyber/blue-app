@@ -206,7 +206,7 @@ export default function CrmOpportunitiesPage({ language: _language }: { language
 
       {/* Add Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-sm">{ar ? "فرصة جديدة" : "New Opportunity"}</DialogTitle>
           </DialogHeader>

@@ -27,7 +27,7 @@ export function TaskDetail({ ar, language, commentTask, onClose }: TaskDetailPro
   return (
     <Sheet open={!!commentTask} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="left" className={cn(
-        "w-[400px] sm:w-[440px] p-0 flex flex-col",
+        "w-full sm:w-[440px] p-0 flex flex-col",
         "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/50"
       )}>
         {commentTask && (

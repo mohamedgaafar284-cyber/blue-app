@@ -3,6 +3,7 @@ import { requireVerifiedAuth } from '@/app/api/utils/auth';
 import { successResponse } from '@/app/api/utils/response';
 import { log } from '@/lib/logger';
 import { withRateLimit, rateLimitResponse } from '@/lib/rate-limit-middleware';
+import { isCookieSecure } from '@/lib/auth/token-utils';
 import { z } from 'zod';
 
 // Zod schema for consent request
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set('gdpr_consent', consentGiven ? 'true' : 'false', {
       maxAge: 60 * 60 * 24 * 365, // 1 year
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isCookieSecure(),
       sameSite: 'lax',
       path: '/',
     });

@@ -151,7 +151,7 @@ export function QuickEntryModal({ language, trigger }: QuickEntryModalProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[480px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+      <DialogContent className="sm:max-w-[480px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-emerald-600" />

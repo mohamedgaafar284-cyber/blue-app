@@ -358,7 +358,7 @@ export default function RetainagePage({ language, projectId }: RetainagePageProp
 
       {/* Add Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{tAuto('auto.newRetainage')}</DialogTitle>
             <DialogDescription>{tAuto('auto.addANewRetainageForTheProject')}</DialogDescription>
@@ -403,7 +403,7 @@ export default function RetainagePage({ language, projectId }: RetainagePageProp
 
       {/* Release Dialog */}
       <Dialog open={!!showReleaseDialog} onOpenChange={(open) => { if (!open) setShowReleaseDialog(null); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{tAuto('auto.releaseRetainage')}</DialogTitle>
             <DialogDescription>

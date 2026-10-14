@@ -185,7 +185,7 @@ export default function FinanceAccountsPage() {
                 {t("إضافة حساب", "Add Account")}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md bg-white dark:bg-slate-900">
+            <DialogContent className="max-w-md bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t("إنشاء حساب مالي جديد", "Create New Financial Account")}</DialogTitle>
               </DialogHeader>

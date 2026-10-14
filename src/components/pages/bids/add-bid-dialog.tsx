@@ -62,7 +62,7 @@ export function AddBidDialog({
   const tAuto = useTranslations();
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onOpenChange(false); onFormDataChange(emptyForm); } }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{tAuto('auto.newBid')}</DialogTitle>
           <DialogDescription>{tAuto('auto.addANewBid')}</DialogDescription>

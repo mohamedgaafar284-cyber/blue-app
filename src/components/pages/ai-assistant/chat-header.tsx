@@ -117,7 +117,7 @@ export function ChatHeader({
                   <span className="hidden sm:inline">{tAuto('auto.clear')}</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-sm" dir={isAr ? "rtl" : "ltr"}>
+              <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto" dir={isAr ? "rtl" : "ltr"}>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Trash2 className="h-5 w-5 text-red-500" />

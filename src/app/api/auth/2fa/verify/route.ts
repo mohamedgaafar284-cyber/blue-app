@@ -21,6 +21,7 @@ import {
   generateAuthToken,
   generateDbRefreshToken,
   getAuthCookieOptions,
+  isCookieSecure,
   normalizeRoleForClient,
 } from '@/lib/auth/token-utils';
 import { getRedis } from '@/lib/cache/redis';
@@ -199,6 +200,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         message: 'تم التحقق بنجاح',
+        token: cookieToken,
         user: {
           id: user.id,
           email: user.email,
@@ -222,7 +224,7 @@ export async function POST(request: NextRequest) {
       path: '/',
       maxAge: 0, // Delete the cookie
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isCookieSecure(),
       sameSite: 'lax',
     });
 
