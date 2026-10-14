@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, safeRandomUUID } from "@/lib/utils";
 import {
   STAGES,
   STAGE_TEMPLATES,
@@ -70,7 +70,7 @@ export function SupervisionForm({
   const loadStageTemplate = (stage: string) => {
     const templates = STAGE_TEMPLATES[stage] || [];
     setCreateItems(templates.map(t => ({
-      _key: crypto.randomUUID(),
+      _key: safeRandomUUID(),
       category: t.category,
       description: t.description,
       specification: t.specification,
@@ -226,7 +226,7 @@ export function SupervisionForm({
                 variant="outline"
                 size="sm"
                 className="h-7 text-[11px]"
-                onClick={() => setCreateItems([...createItems, { _key: crypto.randomUUID(), category: "", description: "", specification: "", isChecked: false, compliant: true, notes: "" }])}
+                onClick={() => setCreateItems([...createItems, { _key: safeRandomUUID(), category: "", description: "", specification: "", isChecked: false, compliant: true, notes: "" }])}
               >
                 <Plus className="h-3 w-3 me-1" />{tAuto('auto.addItem1')}
               </Button>
@@ -312,7 +312,7 @@ export function SupervisionForm({
                 variant="outline"
                 size="sm"
                 className="h-7 text-[11px]"
-                onClick={() => setCreateViolations([...createViolations, { _key: crypto.randomUUID(), type: "SAFETY", severity: "LOW", description: "", contractorName: "", deadline: "" }])}
+                onClick={() => setCreateViolations([...createViolations, { _key: safeRandomUUID(), type: "SAFETY", severity: "LOW", description: "", contractorName: "", deadline: "" }])}
               >
                 <Plus className="h-3 w-3 me-1" />{tAuto('auto.addViolation')}
               </Button>

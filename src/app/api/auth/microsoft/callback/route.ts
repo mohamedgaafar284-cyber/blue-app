@@ -10,6 +10,7 @@ import {
   ACCESS_TOKEN_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
   getAuthCookieOptions,
+  isCookieSecure,
 } from '@/lib/auth/token-utils';
 import { SignJWT } from 'jose';
 import { getJwtSecretBytes } from '@/lib/auth/jwt-secret';
@@ -299,7 +300,7 @@ export async function GET(request: NextRequest) {
       const response = NextResponse.redirect(`${baseUrl}/dashboard?requires2FA=true`);
       response.cookies.set('blue_2fa_temp', tempToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isCookieSecure(),
         sameSite: 'lax',
         path: '/',
         maxAge: 300,

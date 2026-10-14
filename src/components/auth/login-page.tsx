@@ -6,13 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Link from "next/link";
 import {
   Loader2,
@@ -705,24 +698,59 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
                     </>
                   )}
 
-                  {/* Demo Mode Role Selector */}
-                  <div className="pt-2 pb-1">
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      {tAuto('auto.quickLoginDemoMode')}
-                    </p>
-                    <Select value={selectedRole} onValueChange={handleRoleSelect}>
-                      <SelectTrigger className="w-full bg-slate-50/80 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 focus:ring-brand-navy-500/20 focus:border-brand-navy-500">
-                        <SelectValue placeholder={tAuto('auto.selectARole')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ROLES.map((role) => (
-                          <SelectItem key={role.value} value={role.value}>
-                            {isAr ? role.labelAr : role.labelEn} - {role.value}
-                          </SelectItem>
+                  {/* Demo Mode Role Selector — Only shown when demo credentials are available */}
+                  {demoCredentials.length > 0 && (
+                    <div className="pt-2 pb-1 border-t border-slate-100 dark:border-slate-800 mt-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          {isAr ? "⚡ تسجيل الدخول السريع (وضع التجربة):" : "⚡ Quick Login (Demo Mode):"}
+                        </p>
+                        <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full font-semibold">
+                          DEMO
+                        </span>
+                      </div>
+
+                      {/* Quick Role Touch Pills */}
+                      <div className="grid grid-cols-2 gap-1.5 mb-2">
+                        {[
+                          { email: "admin@blueprint.ae", labelAr: "👑 المدير العام", labelEn: "👑 Admin" },
+                          { email: "pm@blueprint.ae", labelAr: "📋 مدير مشاريع", labelEn: "📋 Project Mgr" },
+                          { email: "acc@blueprint.ae", labelAr: "💰 المحاسب", labelEn: "💰 Accountant" },
+                          { email: "hr@blueprint.ae", labelAr: "👥 الموارد البشرية", labelEn: "👥 HR" },
+                        ].map((preset) => (
+                          <button
+                            key={preset.email}
+                            type="button"
+                            onClick={() => handleRoleSelect(preset.email)}
+                            className={cn(
+                              "text-xs py-2 px-2 rounded-lg border text-center transition-all duration-150 font-medium",
+                              selectedRole === preset.email
+                                ? "bg-brand-navy-600 text-white border-brand-navy-600 shadow-sm font-bold"
+                                : "bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800/90 dark:hover:bg-slate-700/90 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 active:scale-95"
+                            )}
+                          >
+                            {isAr ? preset.labelAr : preset.labelEn}
+                          </button>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      </div>
+
+                      {/* Native OS select for all roles (works 100% reliably on all mobile touch screens) */}
+                      <div className="relative">
+                        <select
+                          value={selectedRole}
+                          onChange={(e) => handleRoleSelect(e.target.value)}
+                          className="w-full h-9 px-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-navy-500"
+                        >
+                          <option value="">{isAr ? "-- أدوار أخرى (مهندس، رسام...) --" : "-- Other roles (Engineer, Draftsman...) --"}</option>
+                          {ROLES.map((role) => (
+                            <option key={role.value} value={role.value}>
+                              {isAr ? role.labelAr : role.labelEn} ({role.value})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Submit Button */}
                   <Button

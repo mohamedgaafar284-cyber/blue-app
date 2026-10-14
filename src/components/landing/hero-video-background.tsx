@@ -81,7 +81,7 @@ export function HeroVideoBackground() {
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
           style={{ filter: "brightness(0.9) saturate(1.2)" }}

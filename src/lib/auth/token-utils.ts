@@ -218,6 +218,16 @@ export const TOKEN_EXPIRY = {
 // ─── Cookie Options ──────────────────────────────────────────────────────────
 
 /**
+ * Determine whether auth cookies should require HTTPS (Secure flag).
+ * Supports explicit override via COOKIE_SECURE for LAN testing on HTTP IP addresses.
+ */
+export function isCookieSecure(): boolean {
+  if (process.env.COOKIE_SECURE === 'false') return false;
+  if (process.env.COOKIE_SECURE === 'true') return true;
+  return process.env.NODE_ENV === 'production';
+}
+
+/**
  * Get common cookie options for auth cookies.
  */
 export function getAuthCookieOptions(maxAge: number) {
@@ -225,7 +235,7 @@ export function getAuthCookieOptions(maxAge: number) {
     path: '/',
     maxAge,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isCookieSecure(),
     sameSite: 'lax' as const,
   };
 }

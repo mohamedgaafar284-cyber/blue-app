@@ -13,6 +13,7 @@ import {
   ACCESS_TOKEN_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
   getAuthCookieOptions,
+  isCookieSecure,
 } from '@/lib/auth/token-utils';
 
 /**
@@ -290,7 +291,7 @@ export async function GET(request: NextRequest) {
         path: '/',
         maxAge: 5 * 60,
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isCookieSecure(),
         sameSite: 'lax',
       });
       // Clear the OAuth state and PKCE cookies
