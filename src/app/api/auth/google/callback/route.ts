@@ -353,7 +353,7 @@ export async function GET(request: NextRequest) {
     response.cookies.set('csrf_token', csrfToken, {
       path: '/',
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isCookieSecure(),
       sameSite: 'lax',
       maxAge: 60 * 60 * 24,
     });

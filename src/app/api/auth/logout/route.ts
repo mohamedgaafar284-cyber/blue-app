@@ -5,6 +5,7 @@ import {
   REFRESH_COOKIE_NAME,
   hashToken,
   getAuthCookieOptions,
+  isCookieSecure,
 } from '@/lib/auth/token-utils';
 import { requireVerifiedAuth } from '@/app/api/utils/auth';
 import { authService } from '@/lib/auth/auth-service';
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
     path: '/',
     maxAge: 0,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isCookieSecure(),
     sameSite: 'lax',
   });
 
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     path: '/',
     maxAge: 0,
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isCookieSecure(),
     sameSite: 'lax',
   });
 

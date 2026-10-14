@@ -531,7 +531,7 @@ export default function BOQPage({ language, projectId }: BOQPageProps) {
 
       {/* ===== ADD ITEM DIALOG ===== */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{tAuto('auto.addNewItem')}</DialogTitle>
             <DialogDescription>{tAuto('auto.enterBOQItemDetails')}</DialogDescription>
@@ -551,7 +551,7 @@ export default function BOQPage({ language, projectId }: BOQPageProps) {
 
       {/* ===== EDIT ITEM DIALOG ===== */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{tAuto('auto.editItem')}</DialogTitle>
             <DialogDescription>{tAuto('auto.editBOQItemDetails')}</DialogDescription>
@@ -573,7 +573,7 @@ export default function BOQPage({ language, projectId }: BOQPageProps) {
 
       {/* ===== DELETE CONFIRMATION DIALOG ===== */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-red-600 dark:text-red-400">{tAuto('auto.deleteItem1')}</DialogTitle>
             <DialogDescription>

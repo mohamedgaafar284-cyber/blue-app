@@ -5,6 +5,7 @@ import { requireStepUp2FA, clearStepUpSession } from '@/lib/auth/step-up-2fa';
 import { compare } from 'bcryptjs';
 import { RateLimiter } from '@/lib/rate-limiter';
 import { log } from '@/lib/logger';
+import { isCookieSecure } from '@/lib/auth/token-utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -205,7 +206,7 @@ export async function POST(request: NextRequest) {
     // Clear auth cookies
     response.cookies.set('blue_token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isCookieSecure(),
       sameSite: 'lax',
       path: '/',
       maxAge: 0,
@@ -213,7 +214,7 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set('csrf_token', '', {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isCookieSecure(),
       sameSite: 'lax',
       path: '/',
       maxAge: 0,

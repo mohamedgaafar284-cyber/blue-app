@@ -36,7 +36,7 @@ interface AddVisitDialogProps {
 export function AddVisitDialog({ open, onOpenChange, newVisit, setNewVisit, onAdd }: AddVisitDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>إضافة زيارة جديدة</DialogTitle>
           <DialogDescription>تسجيل زيارة ميدانية للموقع</DialogDescription>
@@ -102,7 +102,7 @@ interface AddBoqItemDialogProps {
 export function AddBoqItemDialog({ open, onOpenChange, newBoqItem, setNewBoqItem, onAdd }: AddBoqItemDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>إضافة بند جديد</DialogTitle>
           <DialogDescription>أضف بند إلى قائمة الكميات</DialogDescription>
@@ -176,7 +176,7 @@ interface AddInteractionDialogProps {
 export function AddInteractionDialog({ open, onOpenChange, newInteraction, setNewInteraction, onAdd }: AddInteractionDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>تسجيل تواصل جديد</DialogTitle>
           <DialogDescription>سجل تفاعل جديد مع العميل</DialogDescription>

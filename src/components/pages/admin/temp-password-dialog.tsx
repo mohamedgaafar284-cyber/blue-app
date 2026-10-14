@@ -68,7 +68,7 @@ export function TempPasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md" dir={isAr ? "rtl" : "ltr"}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" dir={isAr ? "rtl" : "ltr"}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-brand-navy-600" />

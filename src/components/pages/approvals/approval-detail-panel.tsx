@@ -84,7 +84,7 @@ export function ApprovalDetailPanel({
               </div>
             </div>
 
-            <ScrollArea className="h-[calc(100vh-220px)]">
+            <ScrollArea className="h-[calc(100dvh-220px)]">
               <div className="p-4 space-y-5">
                 {/* View Entity Info (if entityId is not "NEW") */}
                 {selectedApproval.entityId && selectedApproval.entityId !== "NEW" && (

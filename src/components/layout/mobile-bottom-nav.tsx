@@ -308,7 +308,7 @@ export default function MobileBottomNav({ language }: { language: "ar" | "en" })
                   {tAuto('auto.more')}
                 </h3>
               </div>
-              <ScrollArea className="h-[calc(100vh-3.5rem)]">
+              <ScrollArea className="h-[calc(100dvh-3.5rem)]">
                 <div className="p-2 space-y-1">
                   {moreMenuItems
                     .filter((item) => {

@@ -192,7 +192,7 @@ export default function FinancialTab({ project, language, projectId, activeSubTa
 
       {/* Add Payment Milestone Dialog */}
       <Dialog open={openAddMilestone} onOpenChange={setOpenAddMilestone}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("إضافة مرحلة دفع جديدة", "Add New Payment Milestone")}</DialogTitle>
           </DialogHeader>

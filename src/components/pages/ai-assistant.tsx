@@ -546,7 +546,7 @@ export default function AIAssistant({ language: lang, projectId }: Props) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex gap-3 h-[calc(100vh-10rem)] max-w-6xl mx-auto">
+      <div className="flex gap-3 h-[calc(100dvh-10rem)] max-w-6xl mx-auto">
         {/* Conversation History Sidebar */}
         <ChatSidebar
           isAr={isAr}

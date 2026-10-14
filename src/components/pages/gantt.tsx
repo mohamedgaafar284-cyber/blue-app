@@ -415,7 +415,7 @@ export default function GanttPage({ language }: GanttPageProps) {
 
       {/* ===== CREATE TASK DIALOG ===== */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{tAuto('auto.addNewTask')}</DialogTitle>
             <DialogDescription>{tAuto('auto.enterTaskDetailsForTheTimeline')}</DialogDescription>

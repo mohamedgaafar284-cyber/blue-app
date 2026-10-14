@@ -3,6 +3,7 @@ import { requireVerifiedAuth } from '@/app/api/utils/auth';
 import { db } from '@/lib/db';
 import { log } from '@/lib/logger';
 import * as crypto from 'crypto';
+import { isCookieSecure } from '@/lib/auth/token-utils';
 
 /**
  * GET /api/auth/link-oauth
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     const cookieOptions = {
       path: '/',
       httpOnly: true,
-      secure: isProduction,
+      secure: isCookieSecure(),
       // SECURITY FIX (P0-3): tighten SameSite from 'lax' to 'strict' for CSRF cookies.
       // OAuth callbacks still work because the top-level navigation GET carries the
       // cookies; 'strict' blocks cross-site subrequests, which is what we want.

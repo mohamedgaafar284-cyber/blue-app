@@ -540,7 +540,7 @@ export default function KnowledgePage({ language, projectId }: KnowledgePageProp
                 )}
               </div>
               ) : (
-              <div className="border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden">
+              <div className="border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="bg-slate-50/80 dark:bg-slate-800/50">
