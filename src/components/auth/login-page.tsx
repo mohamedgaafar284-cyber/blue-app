@@ -553,7 +553,15 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
                 )}
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form
+                  action="#"
+                  method="post"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }}
+                  className="space-y-4"
+                >
                   {/* Error Message */}
                   {error && (
                     <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm animate-scale-in">
@@ -756,6 +764,12 @@ export default function LoginPage({ language: _language }: LoginPageProps) {
                   <Button
                     type="submit"
                     disabled={isLoading}
+                    onClick={(e) => {
+                      if (!isLoading) {
+                        e.preventDefault();
+                        handleSubmit(e);
+                      }
+                    }}
                     className={cn(
                       "w-full h-11 bg-gradient-to-r from-brand-navy-500 to-cyan-500",
                       "hover:from-brand-navy-600 hover:to-cyan-600 text-white font-medium",
