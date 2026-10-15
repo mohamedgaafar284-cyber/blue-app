@@ -163,6 +163,7 @@ async function main() {
     `CSRF_SECRET="${csrfSecret}"`,
     `ENCRYPTION_KEY="${encryptionKey}"`,
     `DEMO_MODE=${isDemo ? 'true' : 'false'}`,
+    `COOKIE_SECURE=false`,
     `NODE_ENV=${isDemo ? 'development' : 'production'}`,
     `NEXTAUTH_URL="http://localhost:3000"`,
     `SMTP_HOST=""`, `SMTP_PORT="587"`, `SMTP_USER=""`, `SMTP_PASS=""`,
@@ -323,6 +324,28 @@ async function main() {
   rl.close();
 
   if (startDev.toLowerCase() === 'y') {
+    log('\nChecking port 3000...');
+    try {
+      if (process.platform === 'win32') {
+        const netstat = spawnSync('netstat', ['-ano'], { encoding: 'utf-8' });
+        if (netstat.stdout) {
+          const lines = netstat.stdout.split('\n');
+          for (const line of lines) {
+            if (line.includes(':3000') && line.includes('LISTENING')) {
+              const parts = line.trim().split(/\s+/);
+              const pid = parts[parts.length - 1];
+              if (pid && pid !== '0' && pid !== process.pid.toString()) {
+                log(`[INFO] Port 3000 is occupied by process PID ${pid}. Freeing port 3000...`);
+                spawnSync('taskkill', ['/F', '/PID', pid], { stdio: 'ignore' });
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+
     log('\nStarting development server...');
     log('  (Press Ctrl+C to stop)\n');
     // Use spawn (not spawnSync) so the server runs in foreground
