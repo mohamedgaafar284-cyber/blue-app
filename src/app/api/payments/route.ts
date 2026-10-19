@@ -56,11 +56,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const projectId = searchParams.get("projectId");
+    const invoiceId = searchParams.get("invoiceId");
+    const type = searchParams.get("type"); // 'expense' (no invoiceId) or 'invoice' (has invoiceId)
     const { page, limit, search } = parsePaginationParams(searchParams);
 
     const where: Record<string, unknown> = { ...orgFilter(ctx) };
     if (status) where.status = status;
     if (projectId) where.projectId = projectId;
+    if (invoiceId) {
+      where.invoiceId = invoiceId;
+    } else if (type === "expense") {
+      where.invoiceId = null;
+    } else if (type === "invoice") {
+      where.invoiceId = { not: null };
+    }
     if (search) {
       where.OR = [
         { beneficiary: insensitiveContains(search) },
@@ -70,7 +79,7 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const cacheKey = buildCacheKey('payments', 'list', ctx.organizationId || 'global', `p${page}`, `l${limit}`, status || '', projectId || '', search || '');
+    const cacheKey = buildCacheKey('payments', 'list', ctx.organizationId || 'global', `p${page}`, `l${limit}`, status || '', projectId || '', invoiceId || '', type || '', search || '');
 
     const { payments, total } = await cachedQuery(cacheKey, async () => {
       const [payments, total] = await Promise.all([
@@ -151,13 +160,14 @@ export async function POST(request: NextRequest) {
         createdById: ctx.userId,
         amount,
         projectId: projectId || null,
+        invoiceId: invoiceId || null,
         beneficiary: beneficiary || "",
         createdAt: { gte: new Date(Date.now() - 2 * 60 * 1000) },
       }
     });
 
     if (recentDuplicate) {
-      log.warn("Prevented double-charge (time-based)", { userId: ctx.userId, amount, projectId });
+      log.warn("Prevented double-charge (time-based)", { userId: ctx.userId, amount, projectId, invoiceId });
       return NextResponse.json(recentDuplicate, { status: 200 });
     }
 
@@ -179,35 +189,37 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Money state first (atomic: paidAmount + status + journal entry + audit log)
-        const updatedInvoice = await invoiceService.recordPayment(
-          invoiceId,
-          amount,
-          ctx.organizationId,
-          ctx.userId,
-          payMethod === 'cash' ? 'cash' : 'bank'
-        );
-
-        // Voucher row linked to the invoice for lists/statements
-        const payment = await db.payment.create({
-          data: {
-            voucherNumber: voucherNumber || "",
-            projectId: projectId || null,
+        // Atomic transaction: money state (invoice update + journal entry) + voucher row together
+        const payment = await db.$transaction(async (tx) => {
+          const updatedInvoice = await invoiceService.recordPayment(
             invoiceId,
             amount,
-            payMethod: payMethod,
-            beneficiary: beneficiary || "",
-            referenceNumber: referenceNumber || "",
-            description: description || `دفعة على الفاتورة ${updatedInvoice.number}`,
-            status: "APPROVED",
-            ...orgCreate(ctx),
-            createdById: ctx.userId,
-          },
-          include: {
-            approver: { select: { id: true, name: true } },
-            project: { select: { id: true, name: true, nameEn: true, number: true } },
-            invoice: { select: { id: true, number: true, status: true, paidAmount: true, remaining: true } },
-          },
+            ctx.organizationId || '',
+            ctx.userId,
+            payMethod === 'cash' ? 'cash' : 'bank',
+            tx
+          );
+
+          return await tx.payment.create({
+            data: {
+              voucherNumber: voucherNumber || "",
+              projectId: projectId || null,
+              invoiceId,
+              amount,
+              payMethod: payMethod,
+              beneficiary: beneficiary || "",
+              referenceNumber: referenceNumber || "",
+              description: description || `دفعة على الفاتورة ${updatedInvoice.number}`,
+              status: "APPROVED",
+              ...orgCreate(ctx),
+              createdById: ctx.userId,
+            },
+            include: {
+              approver: { select: { id: true, name: true } },
+              project: { select: { id: true, name: true, nameEn: true, number: true } },
+              invoice: { select: { id: true, number: true, status: true, paidAmount: true, remaining: true } },
+            },
+          });
         });
 
         // Invalidate payment + invoice + dashboard caches after creation
@@ -224,9 +236,9 @@ export async function POST(request: NextRequest) {
         log.info("Invoice payment recorded", {
           userId: ctx.userId,
           invoiceId,
-          invoiceNumber: updatedInvoice.number,
+          invoiceNumber: payment.invoice?.number,
           amount,
-          newStatus: updatedInvoice.status,
+          newStatus: payment.invoice?.status,
         });
         return NextResponse.json(payment, { status: 201 });
       } catch (paymentError) {

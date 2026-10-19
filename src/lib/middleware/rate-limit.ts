@@ -75,6 +75,11 @@ function cleanupRateLimitStore(): void {
 export function classifyRateLimitTier(pathname: string): RateLimitTier | null {
   if (!pathname.startsWith('/api/')) return null;
 
+  // Internal service-to-service endpoints (e.g. rate-limit proxy check) are
+  // authenticated via INTERNAL_API_SECRET and MUST NOT be rate-limited themselves
+  // to prevent infinite recursive self-request loops (Self-DoS).
+  if (pathname.startsWith('/api/internal/')) return null;
+
   // ── Strict tier: sensitive auth mutations ─────────────────────
   if (
     pathname === '/api/auth/login' ||

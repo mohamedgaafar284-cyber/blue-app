@@ -62,7 +62,7 @@ export const taskUpdateSchema = z.object({
   projectId: z.string().optional(),
   assigneeId: z.string().optional(),
   priority: z.enum(['URGENT', 'HIGH', 'MEDIUM', 'LOW', 'NORMAL']).optional(),
-  status: z.string().max(50).optional(),
+  status: z.enum(['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE', 'CANCELLED', 'todo', 'in_progress', 'review', 'done', 'cancelled']).optional(),
   startDate: z.string().optional(),
   dueDate: z.string().optional(),
   progress: z.coerce.number().min(0).max(100).optional(),

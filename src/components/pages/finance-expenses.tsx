@@ -84,7 +84,7 @@ export default function FinanceExpensesPage({ }: Props) {
     queryKey: ["payments-expenses"],
     queryFn: async () => {
       try {
-        const res = await fetch("/api/payments");
+        const res = await fetch("/api/payments?type=expense&limit=1000");
         if (!res.ok) throw new Error("Failed");
         const json = await res.json();
         // Try all known response shapes, then ensure we always return an array

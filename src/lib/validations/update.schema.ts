@@ -32,7 +32,7 @@ export const invoiceUpdateSchema = z.object({
   projectId: z.string().min(1, 'المشروع مطلوب').optional(),
   issueDate: z.string().min(1, 'تاريخ الإصدار مطلوب').optional(),
   dueDate: z.string().min(1, 'تاريخ الاستحقاق مطلوب').optional(),
-  status: z.string().max(50).optional(),
+  status: z.enum(['DRAFT', 'SENT', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'CANCELLED']).optional(),
 
 });
 

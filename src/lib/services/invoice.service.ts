@@ -6,7 +6,7 @@
  * Business logic layer for invoice operations
  */
 
-import { db } from '@/lib/db';
+import { db, TransactionClient } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { insensitiveContains } from '@/app/api/utils/db';
 import { logAudit } from './audit.service';
@@ -368,11 +368,17 @@ class InvoiceService {
       }
 
       if (invoice.status === 'DRAFT') {
-        // Update status to SENT
-        await tx.invoice.update({
-          where: { id },
+        // Atomic status transition using OCC to avoid race conditions
+        const updateResult = await tx.invoice.updateMany({
+          where: { id, organizationId, status: 'DRAFT', deletedAt: null },
           data: { status: 'SENT' },
         });
+
+        if (updateResult.count === 0) {
+          // Another request already transitioned this invoice
+          const current = await tx.invoice.findFirst({ where: { id, organizationId } });
+          return current || invoice;
+        }
 
         // GL Integration: Auto-create journal entry for the invoice
         try {
@@ -422,7 +428,8 @@ class InvoiceService {
     amountInput: number,
     organizationId: string,
     userId: string,
-    paymentMethod: 'cash' | 'bank' = 'bank'
+    paymentMethod: 'cash' | 'bank' = 'bank',
+    externalTx?: TransactionClient
   ): Promise<Invoice> {
     if (amountInput <= 0) {
       throw new Error('Payment amount must be positive');
@@ -430,7 +437,7 @@ class InvoiceService {
     // Defensive fils rounding: keep paidAmount/remaining at money precision (2dp)
     const amount = round2(new Prisma.Decimal(amountInput)).toNumber();
 
-    return await db.$transaction(async (tx) => {
+    const executeWithTx = async (tx: TransactionClient): Promise<Invoice> => {
       // First verify the invoice belongs to the organization and is not deleted
       const invoice = await tx.invoice.findFirst({
         where: { id, organizationId, deletedAt: null },
@@ -438,6 +445,14 @@ class InvoiceService {
 
       if (!invoice) {
         throw new Error('Invoice not found or access denied');
+      }
+
+      if (invoice.status === 'DRAFT') {
+        throw new Error('Cannot record payment for a DRAFT invoice. Send the invoice first.');
+      }
+
+      if (invoice.status === 'CANCELLED') {
+        throw new Error('Cannot record payment for a CANCELLED invoice.');
       }
 
       const currentPaid = new Prisma.Decimal(invoice.paidAmount);
@@ -504,7 +519,12 @@ class InvoiceService {
       }
 
       return finalInvoice;
-    });
+    };
+
+    if (externalTx) {
+      return await executeWithTx(externalTx);
+    }
+    return await db.$transaction(executeWithTx);
   }
 
   /**

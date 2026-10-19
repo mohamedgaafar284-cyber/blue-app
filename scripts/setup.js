@@ -163,7 +163,7 @@ async function main() {
     `CSRF_SECRET="${csrfSecret}"`,
     `ENCRYPTION_KEY="${encryptionKey}"`,
     `DEMO_MODE=${isDemo ? 'true' : 'false'}`,
-    `COOKIE_SECURE=false`,
+    `COOKIE_SECURE=${isDemo ? 'false' : 'true'}`,
     `NODE_ENV=${isDemo ? 'development' : 'production'}`,
     `NEXTAUTH_URL="http://localhost:3000"`,
     `SMTP_HOST=""`, `SMTP_PORT="587"`, `SMTP_USER=""`, `SMTP_PASS=""`,
