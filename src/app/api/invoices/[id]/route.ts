@@ -170,6 +170,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json(sentInvoice);
     }
 
+    // Cancellation: flip status to CANCELLED + reverse AR journal entry atomically
+    if (requestedStatus === 'CANCELLED' && existing.status !== 'CANCELLED') {
+      const cancelledInvoice = await invoiceService.cancelInvoice(id, user.organizationId as string, user.userId);
+      return NextResponse.json(cancelledInvoice);
+    }
+
     return NextResponse.json(invoice);
   } catch (error) {
     log.error("Error updating invoice:", error);
