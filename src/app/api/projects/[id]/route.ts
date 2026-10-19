@@ -92,10 +92,10 @@ export async function GET(
 
     const taskStats = {
       total: project.tasks.length,
-      TODO: project.tasks.filter((t) => t.status === "TODO").length,
-      inProgress: project.tasks.filter((t) => t.status === "IN_PROGRESS").length,
-      REVIEW: project.tasks.filter((t) => t.status === "IN_REVIEW").length,
-      DONE: project.tasks.filter((t) => t.status === "DONE").length,
+      TODO: project.tasks.filter((t) => t.status === "TODO" || t.status === "todo").length,
+      inProgress: project.tasks.filter((t) => t.status === "IN_PROGRESS" || t.status === "in_progress").length,
+      REVIEW: project.tasks.filter((t) => t.status === "REVIEW" || t.status === "IN_REVIEW" || t.status === "review").length,
+      DONE: project.tasks.filter((t) => t.status === "DONE" || t.status === "done").length,
     };
 
     const stagesByDepartment: Record<string, typeof project.stages> = {};

@@ -18,14 +18,16 @@ WORKDIR /app
 # Copy package files
 COPY package.json bun.lock ./
 COPY prisma ./prisma/
+COPY scripts ./scripts/
 
 # Install ALL dependencies (including devDependencies for build)
 # --ignore-scripts skips prepare:husky (dev-only) and postinstall:prisma-generate
 # We run prisma generate manually below
 RUN bun install --ignore-scripts
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Prepare PostgreSQL schema and generate Prisma Client for production container
+ENV DATABASE_PROVIDER=postgresql
+RUN node scripts/prepare-schema.js && npx prisma generate
 
 # ============================================
 # Stage 2: Builder

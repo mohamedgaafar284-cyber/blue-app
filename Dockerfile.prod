@@ -11,12 +11,14 @@ RUN apk add --no-cache libc6-compat openssl python3 make g++
 
 COPY package.json package-lock.json* bun.lock* ./
 COPY prisma ./prisma/
+COPY scripts ./scripts/
 
 # Install all dependencies including devDependencies for compilation
 RUN npm ci || npm install
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Prepare PostgreSQL schema and generate Prisma Client
+ENV DATABASE_PROVIDER=postgresql
+RUN node scripts/prepare-schema.js && npx prisma generate
 
 # Copy source code and build Next.js application
 COPY . .

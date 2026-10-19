@@ -130,7 +130,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         if (existing.invoiceId) {
           const invoice = await tx.invoice.findUnique({
             where: { id: existing.invoiceId },
-            select: { number: true },
+            select: { id: true, number: true, total: true, paidAmount: true },
           });
           if (invoice) {
             await reverseJournalEntriesForReference(
@@ -141,14 +141,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
               ctx.userId
             );
 
-            // Recredit invoice remaining balance
+            // Recredit invoice remaining balance accurately
             const paidReduction = Number(existing.amount);
+            const currentPaid = Number(invoice.paidAmount);
+            const total = Number(invoice.total);
+            const newPaid = Math.max(0, currentPaid - paidReduction);
+            const newRemaining = Math.max(0, total - newPaid);
+            const newStatus = newPaid <= 0 ? 'SENT' : (newPaid >= total ? 'PAID' : 'PARTIALLY_PAID');
+
             await tx.invoice.update({
               where: { id: existing.invoiceId },
               data: {
-                paidAmount: { decrement: paidReduction },
-                remaining: { increment: paidReduction },
-                status: 'PARTIALLY_PAID',
+                paidAmount: newPaid,
+                remaining: newRemaining,
+                status: newStatus,
               },
             });
           }

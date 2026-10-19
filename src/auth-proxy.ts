@@ -41,6 +41,8 @@ const PUBLIC_API_ROUTES = [
   '/api/stripe/plans', '/api/portal',
   '/api/cron/cleanup', '/api/public/stats',
   '/api/whatsapp/webhook',
+  // Internal service-to-service endpoints authenticated via INTERNAL_API_SECRET
+  '/api/internal',
 ];
 
 const CSRF_EXEMPT_PATHS = [
@@ -56,6 +58,8 @@ const CSRF_EXEMPT_PATHS = [
   '/api/auth/microsoft', '/api/auth/microsoft/callback', // Microsoft OAuth social login
   '/api/auth/setup-complete', // One-time setup token verification
   '/api/whatsapp/webhook',
+  // Internal service-to-service endpoints authenticated via Bearer INTERNAL_API_SECRET
+  '/api/internal/rate-limit',
 ];
 
 const PUBLIC_PAGE_ROUTES = [

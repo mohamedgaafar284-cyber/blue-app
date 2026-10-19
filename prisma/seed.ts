@@ -18,12 +18,34 @@ import { defaultAccounts } from '../src/lib/services/accounting.service';
  * وثائق كلمات المرور التجريبية في src/lib/demo-credentials.ts
  */
 
+import fs from 'fs';
+import path from 'path';
+
+// Ensure .env is parsed if tsx was run directly without dotenv preload
+if (fs.existsSync(path.join(__dirname, '../.env'))) {
+  const envFile = fs.readFileSync(path.join(__dirname, '../.env'), 'utf8');
+  for (const line of envFile.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = trimmed.slice(0, eqIdx).trim();
+        const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+        if (!process.env[key]) {
+          process.env[key] = val;
+        }
+      }
+    }
+  }
+}
+
 async function main() {
   // Production safety guard: this seed creates accounts with publicly-known demo
   // passwords (see src/lib/demo-credentials.ts). Never run it against production
   // unless you explicitly acknowledge the risk via ALLOW_SEED_IN_PRODUCTION=true.
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED_IN_PRODUCTION !== 'true') {
-    console.error('❌ Refusing to seed a production database (NODE_ENV=production).');
+  const isProductionEnv = process.env.NODE_ENV === 'production' || process.env.DEMO_MODE === 'false';
+  if (isProductionEnv && process.env.ALLOW_SEED_IN_PRODUCTION !== 'true') {
+    console.error('❌ Refusing to seed a production database (NODE_ENV=production or DEMO_MODE=false).');
     console.error('   This script creates demo accounts with publicly-known passwords.');
     console.error('   For clean production init, use: npx tsx prisma/clean-init.ts');
     console.error('   If you truly intend to seed production, set ALLOW_SEED_IN_PRODUCTION=true.');
