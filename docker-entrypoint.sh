@@ -17,9 +17,16 @@ if [ -z "$ENCRYPTION_KEY" ]; then
   exit 1
 fi
 
-# Run Prisma migrations
-echo "Running database migrations..."
-npx prisma migrate deploy
+# Run Prisma migrations if Prisma CLI is present
+if [ "$RUN_MIGRATIONS" = "true" ] || command -v npx >/dev/null 2>&1; then
+  echo "Attempting database migrations..."
+  if npx prisma migrate deploy 2>&1; then
+    echo "Database migrations completed successfully."
+  else
+    echo "WARNING: Direct 'npx prisma migrate deploy' in runtime container failed or Prisma CLI is omitted."
+    echo "If running in production, use 'docker compose run --rm migrate' or run migrations from CI."
+  fi
+fi
 
 # Start the application
 echo "Starting the application..."

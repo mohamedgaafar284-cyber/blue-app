@@ -76,7 +76,7 @@ SENTRY_DSN="https://xxx@sentry.io/xxx"
 ### 3. Start Services
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### 4. Initialize Database

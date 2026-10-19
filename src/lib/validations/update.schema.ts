@@ -32,7 +32,9 @@ export const invoiceUpdateSchema = z.object({
   projectId: z.string().min(1, 'المشروع مطلوب').optional(),
   issueDate: z.string().min(1, 'تاريخ الإصدار مطلوب').optional(),
   dueDate: z.string().min(1, 'تاريخ الاستحقاق مطلوب').optional(),
-  status: z.enum(['DRAFT', 'SENT', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'CANCELLED']).optional(),
+  // Only explicit user transitions allowed via PUT are SENT and CANCELLED.
+  // PAID, PARTIALLY_PAID, and OVERDUE are system-computed states (via recordPayment & cron).
+  status: z.enum(['SENT', 'CANCELLED']).optional(),
 
 });
 
