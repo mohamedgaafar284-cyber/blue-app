@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeReport, formatAsCSV, formatAsPDF, ReportDefinition } from "@/lib/services/report-builder.service";
+import { executeReport, formatAsCSV, formatAsPDF, validateReportDefinition, ReportDefinition } from "@/lib/services/report-builder.service";
 import { requireVerifiedPermission } from "../../utils/auth";
 import { errorResponse } from "../../utils/response";
 import { Permission } from "@/lib/auth/types";
@@ -28,6 +28,11 @@ export async function POST(request: NextRequest) {
 
     if (!definition || !definition.dataSource || !definition.fields) {
       return errorResponse("Invalid report definition", "VALIDATION_ERROR", 400);
+    }
+
+    const validationErrors = validateReportDefinition(definition);
+    if (validationErrors.length > 0) {
+      return errorResponse(validationErrors.join("; "), "VALIDATION_ERROR", 400);
     }
 
     const reportResult = await executeReport(definition, user.organizationId || "");
