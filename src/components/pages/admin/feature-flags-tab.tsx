@@ -24,6 +24,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TabsContent } from "@/components/ui/tabs";
+import { getMutationHeaders } from "@/lib/csrf-client";
 import { Flag, Plus, Pencil, Loader2 } from "lucide-react";
 
 interface FeatureFlagRecord {
@@ -79,7 +81,7 @@ export default function FeatureFlagsTab({ isAr }: FeatureFlagsTabProps) {
     mutationFn: ({ key, enabled }: { key: string; enabled: boolean }) =>
       fetch("/api/feature-flags", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getMutationHeaders(),
         body: JSON.stringify({ key, enabled }),
       }).then((r) => r.json()),
     onSuccess: () => {
@@ -92,7 +94,7 @@ export default function FeatureFlagsTab({ isAr }: FeatureFlagsTabProps) {
     mutationFn: (data: typeof form) =>
       fetch("/api/feature-flags", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getMutationHeaders(),
         body: JSON.stringify(data),
       }).then((r) => r.json()),
     onSuccess: () => {
@@ -149,7 +151,7 @@ export default function FeatureFlagsTab({ isAr }: FeatureFlagsTabProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <TabsContent value="flags" className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -413,6 +415,6 @@ export default function FeatureFlagsTab({ isAr }: FeatureFlagsTabProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </TabsContent>
   );
 }
