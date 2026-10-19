@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { requireVerifiedPermission } from "@/app/api/utils/auth";
+import { requireVerifiedPermission, orgCheck } from "@/app/api/utils/auth";
 import { Permission } from "@/lib/auth/types";
 import { validateIdParam } from "@/lib/api-validation";
 import { withRateLimit, rateLimitResponse } from "@/lib/rate-limit-middleware";
@@ -34,11 +34,32 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const rbac = await requireVerifiedPermission(request, Permission.DOCUMENT_READ);
     if ("error" in rbac) return rbac.error;
+    const user = rbac.user;
 
     const { id: rawId } = await params;
     const idResult = validateIdParam(rawId);
     if (!idResult.success) return idResult.response;
     const drawingId = idResult.id;
+
+    const drawing = await db.designDrawing.findUnique({
+      where: { id: drawingId },
+      select: {
+        id: true,
+        deletedAt: true,
+        designPhase: {
+          select: {
+            project: { select: { organizationId: true } },
+          },
+        },
+      },
+    });
+
+    if (!drawing || drawing.deletedAt) {
+      return errorResponse("Drawing not found", "NOT_FOUND", 404);
+    }
+
+    const orgError = orgCheck(user, { organizationId: drawing.designPhase?.project?.organizationId });
+    if (orgError) return orgError;
 
     const revisions = await db.designRevision.findMany({
       where: { drawingId },
@@ -79,12 +100,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const drawing = await db.designDrawing.findUnique({
       where: { id: drawingId },
-      include: { revisions: { orderBy: { version: "desc" }, take: 1 } },
+      include: {
+        designPhase: {
+          select: {
+            project: { select: { organizationId: true } },
+          },
+        },
+        revisions: { orderBy: { version: "desc" }, take: 1 },
+      },
     });
 
     if (!drawing || drawing.deletedAt) {
       return errorResponse("Drawing not found", "NOT_FOUND", 404);
     }
+
+    const orgError = orgCheck(user, { organizationId: drawing.designPhase?.project?.organizationId });
+    if (orgError) return orgError;
 
     const rawBody = await request.json();
     const validation = createRevisionSchema.safeParse(rawBody);

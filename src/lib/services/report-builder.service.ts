@@ -366,19 +366,30 @@ function buildFilterClause(filter: ReportFilter): Record<string, unknown> {
 
 /**
  * Build the complete Prisma where clause from filters and org filter.
+ * SECURITY:
+ * 1. Explicitly ignore/strip any filter attempting to target `organizationId` directly
+ * 2. Combine orgWhere and user filters using `AND: [...]` so user filters can never override tenant scoping.
  */
 function buildWhereClause(
   filters: ReportFilter[],
   orgWhere: Record<string, unknown>
 ): Record<string, unknown> {
-  const where: Record<string, unknown> = { ...orgWhere };
+  const sanitizedFilters = (filters || []).filter(
+    (f) => f && f.field && f.field !== 'organizationId' && f.field !== 'organization'
+  );
 
-  for (const filter of filters) {
-    const clause = buildFilterClause(filter);
-    Object.assign(where, clause);
+  if (sanitizedFilters.length === 0) {
+    return { ...orgWhere };
   }
 
-  return where;
+  const filterClauses = sanitizedFilters.map(buildFilterClause);
+
+  return {
+    AND: [
+      orgWhere,
+      ...filterClauses,
+    ],
+  };
 }
 
 // ============================================

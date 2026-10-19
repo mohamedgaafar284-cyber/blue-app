@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { requireVerifiedPermission } from "@/app/api/utils/auth";
+import { requireVerifiedPermission, orgCheck } from "@/app/api/utils/auth";
 import { Permission } from "@/lib/auth/types";
 import { validateIdParam } from "@/lib/api-validation";
 import { withRateLimit, rateLimitResponse } from "@/lib/rate-limit-middleware";
@@ -10,7 +10,7 @@ import { log } from "@/lib/logger";
 import { z } from "zod";
 
 const signDocumentSchema = z.object({
-  signatureDataUrl: z.string().min(10, "Signature image is required"),
+  signatureDataUrl: z.string().min(10, "Signature image is required").max(700_000, "Signature payload too large (max 500KB)"),
   signerName: z.string().min(1, "Signer name is required").max(100),
   signerRole: z.string().optional().default(""),
 });
@@ -34,11 +34,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const rbac = await requireVerifiedPermission(request, Permission.DOCUMENT_READ);
     if ("error" in rbac) return rbac.error;
+    const user = rbac.user;
 
     const { id: rawId } = await params;
     const idResult = validateIdParam(rawId);
     if (!idResult.success) return idResult.response;
     const documentId = idResult.id;
+
+    // Verify document belongs to caller's org
+    const document = await db.document.findUnique({
+      where: { id: documentId },
+      select: { id: true, organizationId: true, deletedAt: true },
+    });
+
+    if (!document || document.deletedAt) {
+      return errorResponse("Document not found", "NOT_FOUND", 404);
+    }
+
+    const orgError = orgCheck(user, document);
+    if (orgError) return orgError;
 
     const signatures = await db.documentSignature.findMany({
       where: { documentId },
@@ -76,11 +90,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const document = await db.document.findUnique({
       where: { id: documentId },
+      select: { id: true, organizationId: true, deletedAt: true },
     });
 
     if (!document || document.deletedAt) {
       return errorResponse("Document not found", "NOT_FOUND", 404);
     }
+
+    const orgError = orgCheck(user, document);
+    if (orgError) return orgError;
 
     const rawBody = await request.json();
     const validation = signDocumentSchema.safeParse(rawBody);
