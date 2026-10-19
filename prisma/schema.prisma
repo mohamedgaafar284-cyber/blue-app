@@ -1736,6 +1736,8 @@ model Document {
   contract     Contract?    @relation(fields: [contractId], references: [id], onDelete: SetNull)
   uploader     User?        @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  versions     DocumentVersion[]
+  signatures   DocumentSignature[]
 
   @@index([projectId])
   @@index([organizationId])
@@ -1743,6 +1745,38 @@ model Document {
   @@index([category])
   @@index([deletedAt])
   @@index([uploadedById])
+}
+
+model DocumentVersion {
+  id           String    @id @default(cuid())
+  documentId   String
+  version      Int       @default(1)
+  filePath     String    @default("")
+  fileSize     Float     @default(0)
+  changeNotes  String    @default("")
+  uploadedById String?
+  createdAt    DateTime  @default(now())
+
+  document     Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([uploadedById])
+}
+
+model DocumentSignature {
+  id             String    @id @default(cuid())
+  documentId     String
+  signerName     String    @default("")
+  signerRole     String    @default("")
+  signatureImage String    // Base64 or URL data
+  signedById     String?
+  ipAddress      String?
+  signedAt       DateTime  @default(now())
+
+  document       Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([signedById])
 }
 
 // ==================== KNOWLEDGE BASE ====================
