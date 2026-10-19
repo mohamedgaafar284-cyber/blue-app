@@ -213,7 +213,7 @@ cp .env.example .env
 # (حرر .env بقيم الإنتاج)
 
 # 2. شغّل كل الخدمات
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # 3. هاجر قاعدة البيانات
 docker compose exec app bunx prisma migrate deploy

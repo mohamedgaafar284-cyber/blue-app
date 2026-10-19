@@ -214,21 +214,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     // Retrieve the full subscription from Stripe to get accurate period dates.
+    // Support both subscription mode and one-time payment mode (mode === 'payment')
     const { getStripe } = await import('@/lib/stripe');
     const stripe = getStripe();
-    const subscriptionId = session.subscription as string;
+    const subscriptionId = (session.subscription as string) || (session.payment_intent ? `one_time_${session.payment_intent}` : `session_${session.id}`);
     let periodStart = new Date();
     let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // fallback: 30 days
 
-    if (subscriptionId) {
+    if (session.subscription) {
       try {
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
         const period = getSubscriptionPeriod(subscription);
         periodStart = new Date(period.current_period_start * 1000);
         periodEnd = new Date(period.current_period_end * 1000);
       } catch (retrieveErr) {
         log.warn('[Stripe] Failed to retrieve subscription for period — using 30-day fallback', {
-          subscriptionId,
+          subscriptionId: session.subscription,
           error: retrieveErr instanceof Error ? retrieveErr.message : retrieveErr,
         });
       }

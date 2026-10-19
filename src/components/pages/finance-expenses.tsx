@@ -123,11 +123,42 @@ export default function FinanceExpensesPage({ }: Props) {
     });
   }, [payments, search, filterProject, filterMethod, filterStatus, ar]);
 
+  // Fetch server-side accurate aggregates
+  const { data: serverAggregates } = useQuery<{
+    totalAmount: number;
+    totalCount: number;
+    completedAmount: number;
+    completedCount: number;
+    pendingAmount: number;
+    pendingCount: number;
+  }>({
+    queryKey: ["payments-expenses-aggregate", filterProject],
+    queryFn: async () => {
+      try {
+        const url = filterProject !== "all"
+          ? `/api/payments/aggregate?type=expense&projectId=${filterProject}`
+          : `/api/payments/aggregate?type=expense`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+      } catch {
+        return null;
+      }
+    },
+  });
+
   // Summary calculations
   const now = new Date();
-  const totalExpenses = filtered.reduce((s, p) => s + Number(p.amount), 0);
-  const completedExpenses = filtered.filter((p) => p.status === "COMPLETED").reduce((s, p) => s + Number(p.amount), 0);
-  const pendingExpenses = filtered.filter((p) => p.status === "PENDING" || p.status === "APPROVED").reduce((s, p) => s + Number(p.amount), 0);
+  const hasActiveFilters = search !== "" || filterMethod !== "all" || filterStatus !== "all";
+  const totalExpenses = (serverAggregates && !hasActiveFilters)
+    ? serverAggregates.totalAmount
+    : filtered.reduce((s, p) => s + Number(p.amount), 0);
+  const completedExpenses = (serverAggregates && !hasActiveFilters)
+    ? serverAggregates.completedAmount
+    : filtered.filter((p) => p.status === "COMPLETED").reduce((s, p) => s + Number(p.amount), 0);
+  const pendingExpenses = (serverAggregates && !hasActiveFilters)
+    ? serverAggregates.pendingAmount
+    : filtered.filter((p) => p.status === "PENDING" || p.status === "APPROVED").reduce((s, p) => s + Number(p.amount), 0);
 
   const thisMonthPayments = filtered.filter((p) => {
     const d = new Date(p.createdAt);

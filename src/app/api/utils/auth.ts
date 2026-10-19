@@ -410,7 +410,7 @@ export async function requireVerifiedAuth(
   }
 
   // DEMO MODE PROTECTION: Protect core data from modification
-  if (process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'development') {
+  if (process.env.DEMO_MODE === 'true') {
     const method = request.method;
     const path = request.nextUrl.pathname;
     
