@@ -191,10 +191,10 @@ class InvoiceService {
     const taxDec = round2(subtotalDec.mul(taxRateDec.div(100)));
     const totalDec = subtotalDec.add(taxDec);
 
-    // Use transaction for safe creation
-    return await db.$transaction(async (tx) => {
-      const invoiceNumber = await sequenceService.generateDocumentNumber('INV', 'INVOICE', organizationId);
+    const invoiceNumber = await sequenceService.generateDocumentNumber('INV', 'INVOICE', organizationId);
 
+    // Use transaction for safe creation
+    const result = await db.$transaction(async (tx) => {
       const invoice = await tx.invoice.create({
         data: {
           number: invoiceNumber,
@@ -236,18 +236,20 @@ class InvoiceService {
         },
       });
 
-      await logAudit({
-        userId,
-        organizationId,
-        entityType: 'invoice',
-        entityId: invoice.id,
-        action: 'create',
-        description: `تم إنشاء الفاتورة: ${invoice.number}`,
-        metadata: { projectId: data.projectId, newValue: invoice },
-      });
-
       return invoice;
     });
+
+    await logAudit({
+      userId,
+      organizationId,
+      entityType: 'invoice',
+      entityId: result.id,
+      action: 'create',
+      description: `تم إنشاء الفاتورة: ${result.number}`,
+      metadata: { projectId: data.projectId, newValue: result },
+    });
+
+    return result;
   }
 
   /**
@@ -359,7 +361,7 @@ class InvoiceService {
    * Mark invoice as sent
    */
   async markAsSent(id: string, organizationId: string, userId: string): Promise<Invoice> {
-    return await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
         where: { id, organizationId, deletedAt: null },
       });
@@ -410,21 +412,23 @@ class InvoiceService {
       });
       if (!finalInvoice) throw new Error('Invoice not found after update');
 
-      await automationService.triggerEvent('INVOICE_SENT', {
-        organizationId,
-        entityId: id,
-        userId
-      });
-
       return finalInvoice;
     });
+
+    await automationService.triggerEvent('INVOICE_SENT', {
+      organizationId,
+      entityId: id,
+      userId
+    });
+
+    return result;
   }
 
   /**
    * Cancel invoice and atomically reverse its General Ledger (GL) journal entry
    */
   async cancelInvoice(id: string, organizationId: string, userId: string): Promise<Invoice> {
-    return await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
         where: { id, organizationId, deletedAt: null },
       });
@@ -452,24 +456,20 @@ class InvoiceService {
 
       // If the invoice was already sent (has AR journal entry), reverse it atomically!
       if (invoice.status === 'SENT' || invoice.status === 'OVERDUE') {
-        await reverseJournalEntriesForReference(
+        const reversed = await reverseJournalEntriesForReference(
           tx,
           organizationId,
           invoice.number,
           `Cancelled invoice ${invoice.number}`,
           userId
         );
+        if (!reversed) {
+          log.warn(`GL: No original journal entry found to reverse for invoice ${invoice.number}`, {
+            invoiceId: id,
+            invoiceNumber: invoice.number,
+          });
+        }
       }
-
-      await logAudit({
-        userId,
-        organizationId,
-        entityType: 'invoice',
-        entityId: id,
-        action: 'cancel',
-        description: `تم إلغاء الفاتورة: ${invoice.number}`,
-        metadata: { invoiceNumber: invoice.number, previousStatus: invoice.status },
-      });
 
       const updated = await tx.invoice.findFirst({
         where: { id, organizationId },
@@ -480,8 +480,20 @@ class InvoiceService {
         },
       });
       if (!updated) throw new Error('Invoice not found after cancellation');
-      return updated;
+      return { updated, previousStatus: invoice.status, invoiceNumber: invoice.number };
     });
+
+    await logAudit({
+      userId,
+      organizationId,
+      entityType: 'invoice',
+      entityId: id,
+      action: 'cancel',
+      description: `تم إلغاء الفاتورة: ${result.invoiceNumber}`,
+      metadata: { invoiceNumber: result.invoiceNumber, previousStatus: result.previousStatus },
+    });
+
+    return result.updated;
   }
 
   /**

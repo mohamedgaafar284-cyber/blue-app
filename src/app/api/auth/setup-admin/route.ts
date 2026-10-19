@@ -35,6 +35,7 @@ import { validatePasswordStrength, checkPasswordBreached } from '@/lib/auth/modu
 import { withRateLimit, rateLimitResponse } from '@/lib/rate-limit-middleware';
 import { log } from '@/lib/logger';
 import { UserRole } from '@prisma/client';
+import { AccountingService } from '@/lib/services/accounting.service';
 
 export async function POST(request: NextRequest) {
   // Rate limiting — 'strict' tier: this endpoint creates the most powerful
@@ -108,6 +109,9 @@ export async function POST(request: NextRequest) {
               locale: 'ar',
             },
           });
+
+          // Seed default Chart of Accounts for the newly created production organization
+          await AccountingService.seedDefaultAccounts(tx, org.id);
 
           const admin = await tx.user.create({
             data: {
