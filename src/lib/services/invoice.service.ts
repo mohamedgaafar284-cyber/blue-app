@@ -191,10 +191,10 @@ class InvoiceService {
     const taxDec = round2(subtotalDec.mul(taxRateDec.div(100)));
     const totalDec = subtotalDec.add(taxDec);
 
-    // Use transaction for safe creation
-    return await db.$transaction(async (tx) => {
-      const invoiceNumber = await sequenceService.generateDocumentNumber('INV', 'INVOICE', organizationId);
+    const invoiceNumber = await sequenceService.generateDocumentNumber('INV', 'INVOICE', organizationId);
 
+    // Use transaction for safe creation
+    const result = await db.$transaction(async (tx) => {
       const invoice = await tx.invoice.create({
         data: {
           number: invoiceNumber,
@@ -236,18 +236,20 @@ class InvoiceService {
         },
       });
 
-      await logAudit({
-        userId,
-        organizationId,
-        entityType: 'invoice',
-        entityId: invoice.id,
-        action: 'create',
-        description: `تم إنشاء الفاتورة: ${invoice.number}`,
-        metadata: { projectId: data.projectId, newValue: invoice },
-      });
-
       return invoice;
     });
+
+    await logAudit({
+      userId,
+      organizationId,
+      entityType: 'invoice',
+      entityId: result.id,
+      action: 'create',
+      description: `تم إنشاء الفاتورة: ${result.number}`,
+      metadata: { projectId: data.projectId, newValue: result },
+    });
+
+    return result;
   }
 
   /**
@@ -359,7 +361,7 @@ class InvoiceService {
    * Mark invoice as sent
    */
   async markAsSent(id: string, organizationId: string, userId: string): Promise<Invoice> {
-    return await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
         where: { id, organizationId, deletedAt: null },
       });
@@ -410,14 +412,88 @@ class InvoiceService {
       });
       if (!finalInvoice) throw new Error('Invoice not found after update');
 
-      await automationService.triggerEvent('INVOICE_SENT', {
-        organizationId,
-        entityId: id,
-        userId
-      });
-
       return finalInvoice;
     });
+
+    await automationService.triggerEvent('INVOICE_SENT', {
+      organizationId,
+      entityId: id,
+      userId
+    });
+
+    return result;
+  }
+
+  /**
+   * Cancel invoice and atomically reverse its General Ledger (GL) journal entry
+   */
+  async cancelInvoice(id: string, organizationId: string, userId: string): Promise<Invoice> {
+    const result = await db.$transaction(async (tx) => {
+      const invoice = await tx.invoice.findFirst({
+        where: { id, organizationId, deletedAt: null },
+      });
+      if (!invoice) {
+        throw new Error('Invoice not found or access denied');
+      }
+
+      if (invoice.status === 'PAID') {
+        throw new Error('Cannot cancel a fully paid invoice. Refund/reverse the payments first.');
+      }
+
+      if (Number(invoice.paidAmount) > 0) {
+        throw new Error('Cannot cancel an invoice with payments applied. Cancel or refund payments first.');
+      }
+
+      // Atomically update status to CANCELLED using OCC
+      const updateResult = await tx.invoice.updateMany({
+        where: { id, organizationId, status: invoice.status, deletedAt: null },
+        data: { status: 'CANCELLED' },
+      });
+
+      if (updateResult.count === 0) {
+        throw new Error('CONCURRENT_UPDATE_ERROR');
+      }
+
+      // If the invoice was already sent (has AR journal entry), reverse it atomically!
+      if (invoice.status === 'SENT' || invoice.status === 'OVERDUE') {
+        const reversed = await reverseJournalEntriesForReference(
+          tx,
+          organizationId,
+          invoice.number,
+          `Cancelled invoice ${invoice.number}`,
+          userId
+        );
+        if (!reversed) {
+          log.warn(`GL: No original journal entry found to reverse for invoice ${invoice.number}`, {
+            invoiceId: id,
+            invoiceNumber: invoice.number,
+          });
+        }
+      }
+
+      const updated = await tx.invoice.findFirst({
+        where: { id, organizationId },
+        include: {
+          client: { select: { id: true, name: true, company: true } },
+          project: { select: { id: true, name: true, nameEn: true, number: true } },
+          items: { orderBy: { createdAt: "asc" } },
+        },
+      });
+      if (!updated) throw new Error('Invoice not found after cancellation');
+      return { updated, previousStatus: invoice.status, invoiceNumber: invoice.number };
+    });
+
+    await logAudit({
+      userId,
+      organizationId,
+      entityType: 'invoice',
+      entityId: id,
+      action: 'cancel',
+      description: `تم إلغاء الفاتورة: ${result.invoiceNumber}`,
+      metadata: { invoiceNumber: result.invoiceNumber, previousStatus: result.previousStatus },
+    });
+
+    return result.updated;
   }
 
   /**

@@ -383,4 +383,70 @@ describe("Accounting Engine & Double-Entry Ledger", () => {
       )
     ).rejects.toThrow(/cannot contain both debit and credit/);
   });
+
+  it("11. should post GL entry on markAsSent and reverse it atomically on cancelInvoice", async () => {
+    const { invoiceService } = await import("@/lib/services/invoice.service");
+
+    // Create client and project for invoice
+    const client = await db.client.create({
+      data: {
+        id: "client-reversal-test",
+        name: "Reversal Client",
+        idNumber: "CL-REV-TEST-001",
+        email: "client-reversal@test.com",
+        phone: "+971509998877",
+        organizationId: testOrgId,
+      },
+    });
+
+    const project = await db.project.create({
+      data: {
+        id: "project-reversal-test",
+        name: "Reversal Project",
+        number: "PRJ-REV-001",
+        clientId: client.id,
+        organizationId: testOrgId,
+      },
+    });
+
+    const invoice = await invoiceService.createInvoice(
+      {
+        clientId: client.id,
+        projectId: project.id,
+        issueDate: new Date(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        items: [
+          {
+            description: "Consultancy Services",
+            quantity: 1,
+            unitPrice: 2000,
+            total: 2000,
+            revenueCode: "4010",
+          },
+        ],
+      },
+      testOrgId,
+      testUserId
+    );
+
+    // 1. Mark as sent -> should create AR journal entry
+    const sentInvoice = await invoiceService.markAsSent(invoice.id, testOrgId, testUserId);
+    expect(sentInvoice.status).toBe("SENT");
+
+    const sentEntry = await db.journalEntry.findFirst({
+      where: { organizationId: testOrgId, reference: invoice.number },
+      include: { lines: true },
+    });
+    expect(sentEntry).not.toBeNull();
+
+    // 2. Cancel invoice -> should flip status to CANCELLED and create REV- entry
+    const cancelledInvoice = await invoiceService.cancelInvoice(invoice.id, testOrgId, testUserId);
+    expect(cancelledInvoice.status).toBe("CANCELLED");
+
+    const revEntry = await db.journalEntry.findFirst({
+      where: { organizationId: testOrgId, reference: `REV-${invoice.number}` },
+      include: { lines: true },
+    });
+    expect(revEntry).not.toBeNull();
+  }, 15000);
 });

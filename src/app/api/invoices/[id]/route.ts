@@ -148,7 +148,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           ...(validatedData.projectId !== undefined && { projectId: validatedData.projectId }),
           ...(validatedData.issueDate !== undefined && { issueDate: new Date(validatedData.issueDate) }),
           ...(validatedData.dueDate !== undefined && { dueDate: new Date(validatedData.dueDate) }),
-          ...(validatedData.status !== undefined && !draftToSent && { status: validatedData.status }),
+          ...(validatedData.status !== undefined && !draftToSent && requestedStatus !== 'CANCELLED' && { status: validatedData.status }),
           subtotal,
           tax,
           total,
