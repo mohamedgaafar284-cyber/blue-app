@@ -17,8 +17,8 @@ if [ -z "$ENCRYPTION_KEY" ]; then
   exit 1
 fi
 
-# Run Prisma migrations if Prisma CLI is present
-if [ "$RUN_MIGRATIONS" = "true" ] || command -v npx >/dev/null 2>&1; then
+# Run Prisma migrations if explicitly enabled (default is to run via 'docker compose run --rm migrate')
+if [ "$RUN_MIGRATIONS" = "true" ]; then
   echo "Attempting database migrations..."
   if npx prisma migrate deploy 2>&1; then
     echo "Database migrations completed successfully."

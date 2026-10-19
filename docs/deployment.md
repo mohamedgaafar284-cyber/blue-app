@@ -73,26 +73,23 @@ MICROSOFT_CLIENT_SECRET="your-microsoft-client-secret"
 SENTRY_DSN="https://xxx@sentry.io/xxx"
 ```
 
-### 3. Start Services
+### 3. Run Database Migrations
+
+Run database migrations using the dedicated migrate container before starting the application:
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm migrate
+```
+
+### 4. Start Services
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-### 4. Initialize Database
+### 5. Create Initial Admin User
 
-```bash
-docker compose exec app bunx prisma migrate deploy
-docker compose exec app bunx tsx prisma/seed.ts
-```
-
-### 5. Create Admin User
-
-The seed script creates a default admin user. The credentials are printed to
-the terminal at the end of `bun run setup` (Demo Mode) — they are NOT documented
-here for security reasons.
-
-**⚠️ Change the admin password immediately after first login!**
+Open your application in the browser. The first-run setup wizard (`/setup`) will automatically detect a clean installation and allow you to configure the initial administrator account securely.
 
 > SECURITY FIX (P0-4): Previously, default credentials (`admin@blue.com / Admin@123`)
 > were hardcoded in this document. They have been removed. Always obtain credentials

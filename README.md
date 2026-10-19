@@ -212,14 +212,13 @@ chmod +x setup.sh
 cp .env.example .env
 # (حرر .env بقيم الإنتاج)
 
-# 2. شغّل كل الخدمات
+# 2. هاجر قاعدة البيانات أولاً
+docker compose -f docker-compose.prod.yml run --rm migrate
+
+# 3. شغّل كل الخدمات
 docker compose -f docker-compose.prod.yml up -d
 
-# 3. هاجر قاعدة البيانات
-docker compose exec app bunx prisma migrate deploy
-
-# 4. زرع البيانات (أول مرة فقط)
-docker compose exec app bunx tsx prisma/seed.ts
+# 4. أول مدير: افتح المتصفح على رابط النظام وسيقوم معالج /setup بإنشاء الحساب الأول بأمان
 ```
 
 راجع [docs/deployment.md](docs/deployment.md) للتفاصيل الكاملة.
