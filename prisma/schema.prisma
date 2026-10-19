@@ -377,6 +377,7 @@ model Project {
   contractorEvaluations      ContractorEvaluation[]
   slaBreaches                SLABreach[]
   aiChatConversations        AIChatConversation[]
+  recurringInvoices          RecurringInvoice[]
 
   @@unique([number, organizationId])
   @@index([clientId])
@@ -574,6 +575,7 @@ model Client {
   proposals           Proposal[]
   interactions        ClientInteraction[]
   buildingInspections BuildingInspection[]
+  recurringInvoices   RecurringInvoice[]
 
   @@unique([email, organizationId], name: "client_email_org_unique")
   @@unique([idNumber, organizationId], name: "client_idnumber_org_unique")
@@ -1625,6 +1627,93 @@ model Equipment {
   @@index([deletedAt])
 }
 
+// ==================== RECURRING INVOICES, PROJECT TEMPLATES & REPORTS ====================
+
+model RecurringInvoice {
+  id             String    @id @default(cuid())
+  name           String    @default("")
+  nameAr         String?
+  clientId       String
+  projectId      String?
+  templateItems  String    @default("[]") // JSON string of template line items
+  notes          String?
+  notesAr        String?
+  frequency      String    @default("MONTHLY") // WEEKLY, MONTHLY, QUARTERLY, ANNUALLY, CUSTOM
+  customDays     Int?
+  startDate      DateTime  @default(now())
+  endDate        DateTime?
+  nextRunDate    DateTime?
+  lastRunDate    DateTime?
+  isActive       Boolean   @default(true)
+  organizationId String
+  createdById    String?
+  deletedAt      DateTime? // Soft delete
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([organizationId])
+  @@index([isActive])
+  @@index([nextRunDate])
+  @@index([deletedAt])
+}
+
+model ProjectTemplate {
+  id                  String    @id @default(cuid())
+  name                String    @default("")
+  nameAr              String?
+  description         String?
+  descriptionAr       String?
+  category            String    @default("RESIDENTIAL") // RESIDENTIAL, COMMERCIAL, VILLA, INDUSTRIAL
+  icon                String    @default("📋")
+  defaultBudget       Decimal?
+  defaultDurationDays Int?
+  currency            String    @default("AED")
+  stages              String    @default("[]") // JSON string of stages and tasks
+  organizationId      String
+  createdById         String?
+  deletedAt           DateTime? // Soft delete
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([category])
+  @@index([organizationId])
+  @@index([deletedAt])
+}
+
+model ReportTemplate {
+  id             String    @id @default(cuid())
+  name           String    @default("")
+  nameAr         String?
+  description    String?
+  dataSource     String    @default("projects")
+  fields         String    @default("[]") // JSON array of selected fields & aggregations
+  filters        String    @default("[]") // JSON array of filter conditions
+  groupBy        String?
+  sortBy         String?
+  sortOrder      String    @default("desc")
+  chartType      String    @default("table") // table, bar, line, pie
+  isPublic       Boolean   @default(false)
+  organizationId String
+  createdById    String?
+  deletedAt      DateTime? // Soft delete
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([dataSource])
+  @@index([organizationId])
+  @@index([deletedAt])
+}
+
 // ==================== DOCUMENTS ====================
 
 model Document {
@@ -1647,6 +1736,8 @@ model Document {
   contract     Contract?    @relation(fields: [contractId], references: [id], onDelete: SetNull)
   uploader     User?        @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  versions     DocumentVersion[]
+  signatures   DocumentSignature[]
 
   @@index([projectId])
   @@index([organizationId])
@@ -1654,6 +1745,38 @@ model Document {
   @@index([category])
   @@index([deletedAt])
   @@index([uploadedById])
+}
+
+model DocumentVersion {
+  id           String    @id @default(cuid())
+  documentId   String
+  version      Int       @default(1)
+  filePath     String    @default("")
+  fileSize     Float     @default(0)
+  changeNotes  String    @default("")
+  uploadedById String?
+  createdAt    DateTime  @default(now())
+
+  document     Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([uploadedById])
+}
+
+model DocumentSignature {
+  id             String    @id @default(cuid())
+  documentId     String
+  signerName     String    @default("")
+  signerRole     String    @default("")
+  signatureImage String    // Base64 or URL data
+  signedById     String?
+  ipAddress      String?
+  signedAt       DateTime  @default(now())
+
+  document       Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([signedById])
 }
 
 // ==================== KNOWLEDGE BASE ====================
@@ -2446,6 +2569,9 @@ model Organization {
   whatsAppMessages           WhatsAppMessage[]
   opportunities              Opportunity[]
   crmActivities              CRMActivity[]
+  recurringInvoices          RecurringInvoice[]
+  projectTemplates           ProjectTemplate[]
+  reportTemplates            ReportTemplate[]
 
   @@index([deletedAt])
 }

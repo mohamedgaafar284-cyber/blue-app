@@ -6,12 +6,13 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Users, Activity, Zap, DatabaseBackup, RefreshCw } from "lucide-react";
+import { Users, Activity, Zap, DatabaseBackup, RefreshCw, Flag } from "lucide-react";
 import { getMutationHeaders } from "@/lib/csrf-client";
 import { type Props, type UserRecord, type ActivityRecord, type NewUserData } from "./types";
 import { AdminStats } from "./admin-stats";
 import { UsersTable } from "./users-table";
 import { AuditLog } from "./audit-log";
+import FeatureFlagsTab from "./feature-flags-tab";
 import {
   BackupRestoreTab,
   AutomationTab,
@@ -90,7 +91,7 @@ export default function AdminPanel({ language: lang }: Props) {
         <div className="lg:col-span-3">
           <Tabs defaultValue="users" dir={isAr ? "rtl" : "ltr"}>
             <div className="flex items-center justify-between mb-3">
-              <TabsList className="grid grid-cols-4 w-fit gap-1 p-1 bg-slate-100 dark:bg-slate-800">
+              <TabsList className="grid grid-cols-5 w-fit gap-1 p-1 bg-slate-100 dark:bg-slate-800">
                 <TabsTrigger value="users" className="gap-1.5 px-4">
                   <Users className="h-4 w-4" />
                   {tAuto('auto.users')}
@@ -106,6 +107,10 @@ export default function AdminPanel({ language: lang }: Props) {
                 <TabsTrigger value="backup" className="gap-1.5 px-4">
                   <DatabaseBackup className="h-4 w-4" />
                   {tAuto('auto.backup')}
+                </TabsTrigger>
+                <TabsTrigger value="flags" className="gap-1.5 px-4">
+                  <Flag className="h-4 w-4" />
+                  {tAuto('auto.featureFlags')}
                 </TabsTrigger>
               </TabsList>
 
@@ -155,6 +160,9 @@ export default function AdminPanel({ language: lang }: Props) {
               restoreTarget={restoreTarget}
               setRestoreTarget={setRestoreTarget}
             />
+
+            {/* Feature Flags Tab */}
+            <FeatureFlagsTab isAr={isAr} />
           </Tabs>
         </div>
 
