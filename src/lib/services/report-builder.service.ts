@@ -1032,11 +1032,26 @@ export function validateReportDefinition(definition: Partial<ReportDefinition>):
 
   // Validate filters
   if (definition.filters) {
+    const validFields = definition.dataSource ? getDataSourceFields(definition.dataSource) : [];
+    const validKeys = new Set(validFields.map((f) => f.key));
+
     for (let i = 0; i < definition.filters.length; i++) {
       const filter = definition.filters[i];
       if (!filter.field) {
         errors.push(`Filter ${i + 1}: field is required`);
+        continue;
       }
+
+      // SECURITY: Disallow direct targeting of tenant/org fields in custom filters
+      if (filter.field === 'organizationId' || filter.field === 'organization') {
+        errors.push(`Filter ${i + 1}: field '${filter.field}' is restricted and cannot be filtered`);
+        continue;
+      }
+
+      if (definition.dataSource && !validKeys.has(filter.field)) {
+        errors.push(`Invalid filter field for ${definition.dataSource}: ${filter.field}`);
+      }
+
       if (!filter.operator) {
         errors.push(`Filter ${i + 1}: operator is required`);
       }

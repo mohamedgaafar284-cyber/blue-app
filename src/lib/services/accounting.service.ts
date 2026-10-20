@@ -931,7 +931,71 @@ export async function reverseJournalEntriesForReference(
 }
 
 /**
- * Seed default chart of accounts for a new organization.
- * Called during organization creation or setup.
+ * Create a journal entry for a received Purchase Order.
+ * Debit: General & Administrative / Operational Expenses (5100) — or Project Expense
+ * Credit: Accounts Payable (2100) — total amount
+ *
+ * @param tx - Prisma transaction client
+ * @param organizationId - Organization ID
+ * @param poNumber - Purchase order number for reference
+ * @param amount - Purchase order amount
+ * @param supplierName - Name of the supplier (for description)
+ * @param _userId - User receiving the PO
  */
+export async function createPurchaseOrderJournalEntry(
+  tx: TransactionClient,
+  organizationId: string,
+  poNumber: string,
+  amount: Prisma.Decimal | number,
+  supplierName: string,
+  _userId: string
+): Promise<void> {
+  const amountDec = new Prisma.Decimal(amount);
+  if (amountDec.lte(0)) return;
+
+  // Prevent duplicate journal entry for the same PO
+  const existing = await tx.journalEntry.findFirst({
+    where: {
+      organizationId,
+      reference: poNumber,
+    },
+    select: { id: true },
+  });
+
+  if (existing) {
+    return;
+  }
+
+  // Get account IDs: Debit 5100 (Expenses), Credit 2100 (Accounts Payable)
+  const expenseAccountId = await getAccountByCode(tx, organizationId, '5100');
+  const apAccountId = await getAccountByCode(tx, organizationId, '2100');
+
+  const journalEntry = await tx.journalEntry.create({
+    data: {
+      date: new Date(),
+      reference: poNumber,
+      description: `Purchase Order ${poNumber} - ${supplierName || 'Supplier'}`,
+      organizationId,
+    },
+  });
+
+  await tx.journalLine.createMany({
+    data: [
+      {
+        journalEntryId: journalEntry.id,
+        accountId: expenseAccountId,
+        debit: amountDec,
+        credit: new Prisma.Decimal(0),
+      },
+      {
+        journalEntryId: journalEntry.id,
+        accountId: apAccountId,
+        debit: new Prisma.Decimal(0),
+        credit: amountDec,
+      },
+    ],
+  });
+
+  log.info(`[GL Integration] Created journal entry for Purchase Order ${poNumber} with amount ${amountDec.toString()}`);
+}
 

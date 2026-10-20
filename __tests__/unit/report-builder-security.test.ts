@@ -42,4 +42,17 @@ describe("Report Builder — Security & Isolation", () => {
     const errors = validateReportDefinition(validDef);
     expect(errors).toEqual([]);
   });
+
+  it("should reject filters attempting to target organizationId directly", () => {
+    const maliciousDef = {
+      dataSource: "projects" as const,
+      fields: [{ key: "name", label: "Project Name", aggregation: "count" as const }],
+      filters: [
+        { field: "organizationId", operator: "eq" as const, value: "foreign-org-id" },
+      ],
+    };
+    const errors = validateReportDefinition(maliciousDef);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.some((e) => e.includes("restricted and cannot be filtered"))).toBe(true);
+  });
 });
