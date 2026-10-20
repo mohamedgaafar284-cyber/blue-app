@@ -7,6 +7,7 @@ import { errorResponse } from "../../utils/response";
 import { Permission } from "@/lib/auth/types";
 import { withRateLimit, rateLimitResponse } from "@/lib/rate-limit-middleware";
 import { log } from "@/lib/logger";
+import { createPurchaseOrderJournalEntry, reverseJournalEntriesForReference } from "@/lib/services/accounting.service";
 
 const poItemSchema = z.object({
   itemName: z.string().min(1, "Item name is required"),
@@ -130,7 +131,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }
       }
 
-      return await tx.purchaseOrder.update({
+      const po = await tx.purchaseOrder.update({
         where: { id },
         data: {
           ...(data.number !== undefined && { number: data.number }),
@@ -145,6 +146,41 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           items: true,
         },
       });
+
+      // GL Integration:
+      // If status changed to RECEIVED -> post debit expense / credit AP journal entry
+      const normalizedStatus = (data.status || "").toUpperCase();
+      const previousStatus = (existing.status || "").toUpperCase();
+
+      if (normalizedStatus === "RECEIVED" && previousStatus !== "RECEIVED") {
+        try {
+          await createPurchaseOrderJournalEntry(
+            tx,
+            user.organizationId!,
+            po.number,
+            po.amount,
+            po.supplier?.name || "Supplier",
+            user.userId
+          );
+        } catch (glError) {
+          log.warn(`[PO GL Warning] Could not post journal entry for PO ${po.number}`, { error: String(glError) });
+        }
+      } else if (normalizedStatus === "CANCELLED" && previousStatus === "RECEIVED") {
+        // Reverse original GL journal entry if PO was cancelled after being received
+        try {
+          await reverseJournalEntriesForReference(
+            tx,
+            user.organizationId!,
+            po.number,
+            "Purchase Order Cancelled",
+            user.userId
+          );
+        } catch (glError) {
+          log.warn(`[PO GL Warning] Could not reverse journal entry for PO ${po.number}`, { error: String(glError) });
+        }
+      }
+
+      return po;
     });
 
     return NextResponse.json({ data: updated });

@@ -449,4 +449,98 @@ describe("Accounting Engine & Double-Entry Ledger", () => {
     });
     expect(revEntry).not.toBeNull();
   }, 15000);
+
+  it("should record AP and Expense journal entries upon receiving a Purchase Order and reverse upon cancellation", async () => {
+    // Seed supplier
+    const supplier = await db.supplier.create({
+      data: {
+        name: "Test Concrete Supplier",
+        email: "ahmed@concretesupplier.ae",
+        phone: "+971501234567",
+        organizationId: testOrgId,
+      },
+    });
+
+    const poNumber = "PO-GL-TEST-001";
+    const poAmount = 15000;
+
+    // 1. Create Purchase Order in DRAFT status
+    const po = await db.purchaseOrder.create({
+      data: {
+        number: poNumber,
+        supplierId: supplier.id,
+        amount: poAmount,
+        status: "DRAFT",
+        organizationId: testOrgId,
+      },
+    });
+
+    // 2. Simulate Receiving the PO (Debit 5100 Expense, Credit 2100 Accounts Payable)
+    const { createPurchaseOrderJournalEntry, reverseJournalEntriesForReference } = await import("@/lib/services/accounting.service");
+
+    await db.$transaction(async (tx) => {
+      await tx.purchaseOrder.update({
+        where: { id: po.id },
+        data: { status: "RECEIVED" },
+      });
+
+      await createPurchaseOrderJournalEntry(
+        tx,
+        testOrgId,
+        po.number,
+        po.amount,
+        supplier.name,
+        testUserId
+      );
+    });
+
+    const poEntry = await db.journalEntry.findFirst({
+      where: { organizationId: testOrgId, reference: poNumber },
+      include: { lines: { include: { account: true } } },
+    });
+
+    expect(poEntry).not.toBeNull();
+    expect(poEntry!.lines.length).toBe(2);
+
+    const expenseLine = poEntry!.lines.find((l) => l.account.code === "5100");
+    const apLine = poEntry!.lines.find((l) => l.account.code === "2100");
+
+    expect(expenseLine).toBeDefined();
+    expect(Number(expenseLine!.debit)).toBe(poAmount);
+    expect(Number(expenseLine!.credit)).toBe(0);
+
+    expect(apLine).toBeDefined();
+    expect(Number(apLine!.credit)).toBe(poAmount);
+    expect(Number(apLine!.debit)).toBe(0);
+
+    // 3. Simulate Cancelling the received PO (Should post REV- entry)
+    await db.$transaction(async (tx) => {
+      await tx.purchaseOrder.update({
+        where: { id: po.id },
+        data: { status: "CANCELLED" },
+      });
+
+      await reverseJournalEntriesForReference(
+        tx,
+        testOrgId,
+        po.number,
+        "Purchase Order Cancelled",
+        testUserId
+      );
+    });
+
+    const poRevEntry = await db.journalEntry.findFirst({
+      where: { organizationId: testOrgId, reference: `REV-${poNumber}` },
+      include: { lines: { include: { account: true } } },
+    });
+
+    expect(poRevEntry).not.toBeNull();
+    expect(poRevEntry!.lines.length).toBe(2);
+
+    const revExpenseLine = poRevEntry!.lines.find((l) => l.account.code === "5100");
+    const revApLine = poRevEntry!.lines.find((l) => l.account.code === "2100");
+
+    expect(Number(revExpenseLine!.credit)).toBe(poAmount);
+    expect(Number(revApLine!.debit)).toBe(poAmount);
+  }, 15000);
 });

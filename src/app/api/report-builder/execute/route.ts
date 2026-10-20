@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
     if ("error" in rbac) return rbac.error;
     const user = rbac.user;
 
+    if (!user.organizationId) {
+      return errorResponse("Organization context is required", "FORBIDDEN", 403);
+    }
+
     const rawBody = await request.json();
     const definition = rawBody.definition as ReportDefinition;
 
