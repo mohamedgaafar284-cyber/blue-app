@@ -153,31 +153,23 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       const previousStatus = (existing.status || "").toUpperCase();
 
       if (normalizedStatus === "RECEIVED" && previousStatus !== "RECEIVED") {
-        try {
-          await createPurchaseOrderJournalEntry(
-            tx,
-            user.organizationId!,
-            po.number,
-            po.amount,
-            po.supplier?.name || "Supplier",
-            user.userId
-          );
-        } catch (glError) {
-          log.warn(`[PO GL Warning] Could not post journal entry for PO ${po.number}`, { error: String(glError) });
-        }
+        await createPurchaseOrderJournalEntry(
+          tx,
+          user.organizationId!,
+          po.number,
+          po.amount,
+          po.supplier?.name || "Supplier",
+          user.userId
+        );
       } else if (normalizedStatus === "CANCELLED" && previousStatus === "RECEIVED") {
         // Reverse original GL journal entry if PO was cancelled after being received
-        try {
-          await reverseJournalEntriesForReference(
-            tx,
-            user.organizationId!,
-            po.number,
-            "Purchase Order Cancelled",
-            user.userId
-          );
-        } catch (glError) {
-          log.warn(`[PO GL Warning] Could not reverse journal entry for PO ${po.number}`, { error: String(glError) });
-        }
+        await reverseJournalEntriesForReference(
+          tx,
+          user.organizationId!,
+          po.number,
+          "Purchase Order Cancelled",
+          user.userId
+        );
       }
 
       return po;
