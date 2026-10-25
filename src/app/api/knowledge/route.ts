@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
         authorId: authorId || ctx.userId,
         projectId: projectId || null,
         views: 0,
-        organizationId: (await db.organization.findFirst())?.id || "",
+        organizationId: ctx.organizationId || (await db.organization.findFirst())?.id || "",
       },
       include: {
         author: { select: { id: true, name: true, avatar: true } },

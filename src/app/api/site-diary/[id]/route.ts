@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { requireVerifiedPermission } from '@/app/api/utils/auth';
+import { requireVerifiedPermission , orgFilter} from '@/app/api/utils/auth';
 import { Permission } from '@/lib/auth/types';
 import { log } from '@/lib/logger';
 import { validateIdParam } from '@/lib/api-validation';
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!idResult.success) return idResult.response;
     const id = idResult.id;
 
-    const orgWhere = ctx.organizationId ? { organizationId: ctx.organizationId } : {};
+    const orgWhere = orgFilter(ctx);
     const diary = await db.siteDiary.findFirst({
       where: { id, deletedAt: null, ...orgWhere },
       include: {
@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const id = idResult.id;
 
     // Verify org ownership before delete
-    const orgWhere = ctx.organizationId ? { organizationId: ctx.organizationId } : {};
+    const orgWhere = orgFilter(ctx);
     const existing = await db.siteDiary.findFirst({ where: { id, ...orgWhere } });
     if (!existing) {
       return NextResponse.json({ error: "Site diary not found" }, { status: 404 });

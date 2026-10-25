@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { requireVerifiedPermission } from '@/app/api/utils/auth';
+import { requireVerifiedPermission , orgFilterNested} from '@/app/api/utils/auth';
 import { Permission } from '@/lib/auth/types';
 import { log } from '@/lib/logger';
 import { validateRequest, validateIdParam, siteVisitUpdateSchema } from '@/lib/api-validation';
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const idResult = validateIdParam(rawId);
     if (!idResult.success) return idResult.response;
     const id = idResult.id;
-    const orgWhere = ctx.organizationId ? { project: { organizationId: ctx.organizationId } } : {};
+    const orgWhere = orgFilterNested(ctx, 'project');
     const siteVisit = await db.siteVisit.findFirst({
       where: { id, deletedAt: null, ...orgWhere },
       include: {
@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const id = idResult.id;
 
     // Verify org ownership before update
-    const orgWhere = ctx.organizationId ? { project: { organizationId: ctx.organizationId } } : {};
+    const orgWhere = orgFilterNested(ctx, 'project');
     const existing = await db.siteVisit.findFirst({ where: { id, ...orgWhere } });
     if (!existing) {
       return NextResponse.json({ error: "Site visit not found" }, { status: 404 });
@@ -115,7 +115,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const id = idResult.id;
 
     // Verify org ownership before delete
-    const orgWhere = ctx.organizationId ? { project: { organizationId: ctx.organizationId } } : {};
+    const orgWhere = orgFilterNested(ctx, 'project');
     const existing = await db.siteVisit.findFirst({ where: { id, ...orgWhere } });
     if (!existing) {
       return NextResponse.json({ error: "Site visit not found" }, { status: 404 });
