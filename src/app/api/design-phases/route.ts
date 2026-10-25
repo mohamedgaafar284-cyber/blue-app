@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { requireVerifiedPermission } from '@/app/api/utils/auth';
+import { requireVerifiedPermission, orgFilterNested, orgCheck } from '@/app/api/utils/auth';
 import { Permission } from '@/lib/auth/types';
 import { log } from '@/lib/logger';
 import { validateRequest, designPhaseCreateSchema } from '@/lib/api-validation';
@@ -20,9 +20,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
 
-    // DesignPhase doesn't have organizationId directly; filter through project relationship
-    const orgWhere = ctx.organizationId ? { project: { organizationId: ctx.organizationId } } : {};
-    const where: Record<string, unknown> = { ...orgWhere };
+    // Secure nested organization filter with default-deny
+    const where: Record<string, unknown> = {
+      ...orgFilterNested(ctx, 'project'),
+    };
     if (projectId) where.projectId = projectId;
 
     const { page, limit } = parsePaginationParams(searchParams);
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await requireVerifiedPermission(request, Permission.PROJECT_CREATE);
     if ('error' in result) return result.error;
-    const _ctx = result.user;
+    const user = result.user;
 
     const rawBody = await request.json();
 
@@ -75,6 +76,19 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = validation.data;
     const { projectId, phase, phaseNameAr, phaseNameEn, status, designerId, startDate, dueDate, notes } = validatedData;
+
+    // SECURITY: Verify the target project belongs to the caller's organization
+    const project = await db.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, organizationId: true },
+    });
+
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    const orgError = orgCheck(user, project);
+    if (orgError) return orgError;
 
     const designPhase = await db.designPhase.create({
       data: {
@@ -87,7 +101,7 @@ export async function POST(request: NextRequest) {
         startDate: startDate ? new Date(startDate) : null,
         dueDate: dueDate ? new Date(dueDate) : null,
         notes: notes || "",
-        organizationId: (await db.organization.findFirst())?.id || "",
+        organizationId: user.organizationId || project.organizationId,
       },
       include: {
         project: {

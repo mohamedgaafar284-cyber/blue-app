@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { requireVerifiedPermission, orgCreate } from '@/app/api/utils/auth';
+import { requireVerifiedPermission, orgCreate , orgFilterNested} from '@/app/api/utils/auth';
 import { Permission } from '@/lib/auth/types';
 import { log } from '@/lib/logger';
 import { z } from 'zod';
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const { page, limit, search } = parsePaginationParams(searchParams);
 
     // RFI doesn't have organizationId directly; filter through project relationship
-    const orgWhere = ctx.organizationId ? { project: { organizationId: ctx.organizationId } } : {};
+    const orgWhere = orgFilterNested(ctx, 'project');
     const where: Record<string, unknown> = { deletedAt: null, ...orgWhere };
     if (projectId) where.projectId = projectId;
     if (status) where.status = status;

@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   try {
     const rbac = await requireVerifiedPermission(request, Permission.CLIENT_CREATE);
     if ('error' in rbac) return rbac.error;
-    const _ctx = rbac.user;
+    const ctx = rbac.user;
 
     const rawBody = await request.json();
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         notes: notes || "",
-        organizationId: (await db.organization.findFirst())?.id || "",
+        organizationId: ctx.organizationId || (await db.organization.findFirst())?.id || "",
       },
     });
 

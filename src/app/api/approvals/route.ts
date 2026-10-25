@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { validateBody, approvalCreateSchema } from '@/lib/api-validation';
-import { requireVerifiedPermission, orgCreate} from '@/app/api/utils/auth';
+import { requireVerifiedPermission, orgCreate, orgFilterNested} from '@/app/api/utils/auth';
 import { Permission } from '@/lib/auth/types';
 import { log } from '@/lib/logger';
 import { withRateLimit, rateLimitResponse } from '@/lib/rate-limit-middleware';
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const { page, limit, search } = parsePaginationParams(searchParams);
 
     // Approval doesn't have organizationId directly; filter through project relationship
-    const orgWhere = ctx.organizationId ? { project: { organizationId: ctx.organizationId } } : {};
+    const orgWhere = orgFilterNested(ctx, 'project');
     const where: Record<string, unknown> = { ...orgWhere };
     if (status && status !== 'all') where.status = status;
     if (entityType && entityType !== 'all') where.entityType = entityType;
