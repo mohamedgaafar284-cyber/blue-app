@@ -1,0 +1,18 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "tsBuildInfoFile": null
+  },
+  "include": [
+    "../src/app/api/project-templates/[id]/instantiate/route.ts",
+    "../src/components/pages/design-management/types.ts",
+    "../src/components/pages/design-management/index.tsx",
+    "../src/components/pages/design-management/design-form.tsx",
+    "../src/components/pages/project-detail/constants.ts",
+    "../src/components/pages/project-detail/helpers.tsx",
+    "../src/components/pages/project-detail/design-tab.tsx",
+    "../src/components/pages/features-hub/design-section.tsx"
+  ]
+}

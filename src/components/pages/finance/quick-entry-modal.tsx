@@ -2,13 +2,13 @@
 
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  PlusCircle, 
-  CheckCircle2, 
-  AlertCircle, 
-  Wallet, 
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  PlusCircle,
+  CheckCircle2,
+  AlertCircle,
+  Wallet,
   Building2,
   DollarSign
 } from "lucide-react";
@@ -29,20 +29,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getMutationHeaders } from "@/lib/csrf-client";
+import { extractErrorMessage } from "@/lib/api/fetch-client";
 
 interface QuickEntryModalProps {
   language: "ar" | "en";
   trigger?: React.ReactNode;
+  /** Controlled mode (used by the quick-actions FAB) */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function QuickEntryModal({ language, trigger }: QuickEntryModalProps) {
+type RevenueCategory = "service" | "supervision" | "other";
+
+export function QuickEntryModal({ language, trigger, open: controlledOpen, onOpenChange }: QuickEntryModalProps) {
   const isAr = language === "ar";
   const queryClient = useQueryClient();
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (v: boolean) => {
+    setInternalOpen(v);
+    onOpenChange?.(v);
+  };
+
   const [type, setType] = useState<"expense" | "income">("expense");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("general");
+  const [expenseCategory, setExpenseCategory] = useState("general");
+  const [revenueCategory, setRevenueCategory] = useState<RevenueCategory>("service");
   const [method, setMethod] = useState<"cash" | "bank">("bank");
   const [description, setDescription] = useState("");
   const [beneficiary, setBeneficiary] = useState("");
@@ -69,48 +83,36 @@ export function QuickEntryModal({ language, trigger }: QuickEntryModalProps) {
         // Post operational payment/expense directly through our hardened route
         const res = await fetch("/api/payments", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getMutationHeaders(),
           body: JSON.stringify({
             amount: parsedAmount,
             payMethod: method,
             beneficiary: beneficiary || (isAr ? "مصروف عام" : "General expense"),
-            description: description || `${isAr ? "مصروف فئة" : "Expense"}: ${category}`,
-            category,
+            description: description || `${isAr ? "مصروف" : "Expense"}: ${expenseCategory}`,
           }),
         });
 
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Failed to record expense");
+          const err = await res.json().catch(() => ({}));
+          throw new Error(extractErrorMessage(err.error, isAr ? "فشل تسجيل المصروف" : "Failed to record expense"));
         }
       } else {
-        // Income / revenue entry via journal entry
-        const res = await fetch("/api/finance/journal-entries", {
+        // Income — the server resolves the Chart of Accounts codes itself
+        // (the old client-side literal account ids violated the FK and 500'd)
+        const res = await fetch("/api/finance/quick-income", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getMutationHeaders(),
           body: JSON.stringify({
+            amount: parsedAmount,
+            method,
+            category: revenueCategory,
             description: description || (isAr ? "إيراد مباشر" : "Direct income"),
-            reference: `INC-${Date.now().toString().slice(-6)}`,
-            lines: [
-              // Debit: Cash/Bank
-              {
-                accountId: method === "cash" ? "1010" : "1020",
-                debit: parsedAmount,
-                credit: 0,
-              },
-              // Credit: Service Revenue
-              {
-                accountId: "4010",
-                debit: 0,
-                credit: parsedAmount,
-              },
-            ],
           }),
         });
 
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Failed to record income");
+          const err = await res.json().catch(() => ({}));
+          throw new Error(extractErrorMessage(err.error, isAr ? "فشل تسجيل الإيراد" : "Failed to record income"));
         }
       }
 
@@ -143,14 +145,16 @@ export function QuickEntryModal({ language, trigger }: QuickEntryModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
+      {trigger !== undefined ? (
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
           <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-sm">
             <PlusCircle className="h-4 w-4" />
             {isAr ? "سجّل حركة سريعة" : "Quick Money Entry"}
           </Button>
-        )}
-      </DialogTrigger>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[480px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold flex items-center gap-2">
@@ -158,8 +162,8 @@ export function QuickEntryModal({ language, trigger }: QuickEntryModalProps) {
             {isAr ? "تسجيل حركة مالية سريعة" : "Quick Financial Entry"}
           </DialogTitle>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {isAr 
-              ? "سجّل ما صرفته أو استلمته في ثوانٍ، والتطبيق يكتب القيد المحاسبي في الخلفية أوتوماتيك." 
+            {isAr
+              ? "سجّل ما صرفته أو استلمته في ثوانٍ، والتطبيق يكتب القيد المحاسبي في الخلفية أوتوماتيك."
               : "Record receipts or expenses in seconds. Double-entry ledger is updated automatically."}
           </p>
         </DialogHeader>
@@ -231,21 +235,34 @@ export function QuickEntryModal({ language, trigger }: QuickEntryModalProps) {
 
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                {isAr ? "الفئة" : "Category"}
+                {type === "expense" ? (isAr ? "نوع المصروف" : "Expense type") : (isAr ? "نوع الإيراد" : "Revenue type")}
               </Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">{isAr ? "عمومي وإداري" : "General & Admin"}</SelectItem>
-                  <SelectItem value="travel">{isAr ? "انتقالات وبنزين" : "Travel & Fuel"}</SelectItem>
-                  <SelectItem value="materials">{isAr ? "مواد وتجهيزات موقع" : "Materials & Site"}</SelectItem>
-                  <SelectItem value="utilities">{isAr ? "فواتير كهرباء وإنترنت" : "Utilities & Internet"}</SelectItem>
-                  <SelectItem value="rent">{isAr ? "إيجار مقرات" : "Office Rent"}</SelectItem>
-                  <SelectItem value="salaries">{isAr ? "سلف ورواتب" : "Salaries & Advances"}</SelectItem>
-                </SelectContent>
-              </Select>
+              {type === "expense" ? (
+                <Select value={expenseCategory} onValueChange={setExpenseCategory}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">{isAr ? "عمومي وإداري" : "General & Admin"}</SelectItem>
+                    <SelectItem value="travel">{isAr ? "انتقالات وبنزين" : "Travel & Fuel"}</SelectItem>
+                    <SelectItem value="materials">{isAr ? "مواد وتجهيزات موقع" : "Materials & Site"}</SelectItem>
+                    <SelectItem value="utilities">{isAr ? "فواتير كهرباء وإنترنت" : "Utilities & Internet"}</SelectItem>
+                    <SelectItem value="rent">{isAr ? "إيجار مقرات" : "Office Rent"}</SelectItem>
+                    <SelectItem value="salaries">{isAr ? "سلف ورواتب" : "Salaries & Advances"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select value={revenueCategory} onValueChange={(v) => setRevenueCategory(v as RevenueCategory)}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="service">{isAr ? "أتعاب تصميم واستشارات" : "Consulting Revenue"}</SelectItem>
+                    <SelectItem value="supervision">{isAr ? "أتعاب إشراف" : "Supervision Revenue"}</SelectItem>
+                    <SelectItem value="other">{isAr ? "إيراد آخر" : "Other Income"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
@@ -265,7 +282,7 @@ export function QuickEntryModal({ language, trigger }: QuickEntryModalProps) {
                 }`}
               >
                 <Wallet className="h-3.5 w-3.5 text-amber-600" />
-                {isAr ? "نقدية / عهدة الخزينة (1010)" : "Cash on Hand (1010)"}
+                {isAr ? "نقدية / عهدة الخزينة" : "Cash on Hand"}
               </button>
               <button
                 type="button"
@@ -277,7 +294,7 @@ export function QuickEntryModal({ language, trigger }: QuickEntryModalProps) {
                 }`}
               >
                 <Building2 className="h-3.5 w-3.5 text-blue-600" />
-                {isAr ? "حساب بنكي / تحويل (1020)" : "Bank Account (1020)"}
+                {isAr ? "حساب بنكي / تحويل" : "Bank Account"}
               </button>
             </div>
           </div>

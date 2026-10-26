@@ -57,14 +57,16 @@ export interface ProjectOption {
 }
 
 // ===== Phase Config =====
+// التسميات موحدة مع DesignPipeline في ملف المشروع (project-detail/constants.ts)
+// على مصطلحات مكاتب الاستشارات الهندسية في الإمارات
 export const PHASE_ORDER = ["CONCEPT", "SCHEMATIC", "DEVELOPMENT", "CONSTRUCTION_DOCS", "AS_BUILT"];
 
 export const PHASE_CONFIG: Record<string, { labelAr: string; labelEn: string; icon: string }> = {
-  CONCEPT: { labelAr: "مفهوم", labelEn: "Concept", icon: "💡" },
-  SCHEMATIC: { labelAr: "تصميم أولي", labelEn: "Schematic", icon: "📐" },
-  DEVELOPMENT: { labelAr: "تطوير التصميم", labelEn: "Development", icon: "🏗️" },
-  CONSTRUCTION_DOCS: { labelAr: "مستندات التنفيذ", labelEn: "Construction Docs", icon: "📋" },
-  AS_BUILT: { labelAr: "كما بُني", labelEn: "As-Built", icon: "✅" },
+  CONCEPT: { labelAr: "المخطط المبدئي", labelEn: "Concept", icon: "💡" },
+  SCHEMATIC: { labelAr: "المخطط التخطيطي", labelEn: "Schematic", icon: "📐" },
+  DEVELOPMENT: { labelAr: "التصميم التفصيلي", labelEn: "Design Development", icon: "🏗️" },
+  CONSTRUCTION_DOCS: { labelAr: "المخططات التنفيذية", labelEn: "Construction Docs", icon: "📋" },
+  AS_BUILT: { labelAr: "كما نُفذ", labelEn: "As-Built", icon: "✅" },
 };
 
 export const STATUS_CONFIG: Record<string, { labelAr: string; labelEn: string; color: string; dotColor: string }> = {

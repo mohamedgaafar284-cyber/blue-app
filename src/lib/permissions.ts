@@ -168,6 +168,13 @@ const allNavItems: NavItem[] = [
         roles: ["ADMIN", "MANAGER", "ACCOUNTANT"],
       },
       {
+        id: "finance-payroll",
+        icon: "Banknote",
+        labelAr: "مسير الرواتب",
+        labelEn: "Payroll",
+        roles: ["ADMIN", "MANAGER", "ACCOUNTANT"],
+      },
+      {
         id: "finance-reports",
         icon: "BarChart3",
         labelAr: "التقارير",
@@ -420,6 +427,7 @@ const ROUTE_ROLE_MATRIX: Record<string, Role[]> = {
   
   // Finance & Accounting
   "/dashboard/finance": ["ADMIN", "MANAGER", "ACCOUNTANT"],
+  "/dashboard/finance/payroll": ["ADMIN", "MANAGER", "ACCOUNTANT"],
   "/dashboard/invoices": ["ADMIN", "MANAGER", "ACCOUNTANT"],
   "/dashboard/payments": ["ADMIN", "MANAGER", "ACCOUNTANT"],
   "/dashboard/recurring-invoices": ["ADMIN", "MANAGER", "ACCOUNTANT"],

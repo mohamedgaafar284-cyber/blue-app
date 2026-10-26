@@ -209,6 +209,7 @@ model User {
   projectFees             ProjectFee[]             @relation("ProjectFeeCreator")
   feeCollections          FeeCollection[]          @relation("FeeCollectionCreator")
   ratioSheets             RatioSheet[]             @relation("RatioSheetCreator")
+  payrollRuns             PayrollRun[]             @relation("PayrollRunCreator")
   uploadedDocuments       Document[]               @relation("DocumentUploader")
   projectComments         ProjectComment[]
   comments                TaskComment[]
@@ -1468,6 +1469,7 @@ model Employee {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   attendance   Attendance[]
   timesheets   Timesheet[]
+  payrollItems PayrollItem[]
   deletedAt    DateTime? // Soft delete
 
   @@index([department])
@@ -2583,6 +2585,8 @@ model Organization {
   feeCollections             FeeCollection[]
   ratioSheets                RatioSheet[]
   ratioItems                 ProjectRatio[]
+  payrollRuns                PayrollRun[]
+  payrollItems               PayrollItem[]
 
   @@index([deletedAt])
 }
@@ -3471,6 +3475,71 @@ model ProjectRatio {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
+  @@index([organizationId])
+  @@index([deletedAt])
+}
+
+// ==================== MONTHLY PAYROLL (مسير الرواتب الشهري) ====================
+// One payroll run per calendar month. The office accountant generates the run
+// from active employees (salaries snapshotted at generation time), fine-tunes
+// allowances/deductions per employee, then approves and marks it paid.
+// Marking a run paid also auto-posts a balanced journal entry
+// (debit Salaries Expense 5010 / credit Cash 1010 or Bank 1020).
+
+model PayrollRun {
+  id              String    @id @default(cuid())
+  organizationId  String // SaaS multi-tenant organization
+  runNumber       String    @default("") // PAY-2026-01
+  year            Int
+  month           Int // 1-12
+  status          String    @default("DRAFT") // DRAFT, APPROVED, PAID
+  notes           String    @default("")
+  totalGross      Decimal   @default(0) // base + allowances for all items
+  totalDeductions Decimal   @default(0)
+  totalNet        Decimal   @default(0) // what employees actually receive
+  employeeCount   Int       @default(0)
+  paymentMethod   String    @default("bank") // bank, cash — used for the GL entry
+  approvedAt      DateTime?
+  paidAt          DateTime?
+  createdById     String?
+  deletedAt       DateTime? // Soft delete
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        PayrollItem[]
+  creator      User?        @relation("PayrollRunCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([year, month])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model PayrollItem {
+  id             String    @id @default(cuid())
+  organizationId String // SaaS multi-tenant organization
+  runId          String
+  employeeId     String? // nullable: snapshot fields keep history if employee row is removed
+  employeeName   String    @default("") // snapshot at generation time
+  position       String    @default("") // snapshot at generation time
+  baseSalary     Decimal   @default(0)
+  allowances     Decimal   @default(0)
+  deductions     Decimal   @default(0)
+  netAmount      Decimal   @default(0) // base + allowances - deductions (server-computed)
+  paid           Boolean   @default(false)
+  paidAt         DateTime?
+  notes          String    @default("")
+  deletedAt      DateTime? // Soft delete
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  run          PayrollRun   @relation(fields: [runId], references: [id], onDelete: Cascade)
+  employee     Employee?    @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([employeeId])
   @@index([organizationId])
   @@index([deletedAt])
 }

@@ -414,7 +414,8 @@
     },
     "payments": {
       "label": "Payments"
-    }
+    },
+    "finance-payroll": "Payroll"
   },
   "pageTitles": {
     "dashboard": "Dashboard",
@@ -464,7 +465,8 @@
     "hr-employees": "HR - Employees",
     "hr-attendance": "HR - Attendance",
     "hr-leave": "HR - Leave",
-    "hr-workload": "HR - Workload"
+    "hr-workload": "HR - Workload",
+    "finance-payroll": "Payroll"
   },
   "auto": {
     "quickLoginDemoMode": "Quick Login (Demo Mode):",
@@ -1566,11 +1568,11 @@
     "logCommunication": "Log Communication",
     "manageDesignPhasesAndEngineeringDrawings": "Manage design phases and engineering drawings",
     "concept": "Concept",
-    "preliminaryDesign": "Preliminary Design",
+    "preliminaryDesign": "Schematic",
     "designDevelopment": "Design Development",
     "notStarted": "Not Started",
     "constructionDocs": "Construction Docs",
-    "asBuilt": "As Built",
+    "asBuilt": "As-Built",
     "2ndFloorPlanUploaded": "2nd floor plan uploaded",
     "2HoursAgo": "2 hours ago",
     "facadePlanReviewRequested": "Facade plan review requested",

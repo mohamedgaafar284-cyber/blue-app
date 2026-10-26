@@ -414,7 +414,8 @@
     },
     "payments": {
       "label": "المدفوعات"
-    }
+    },
+    "finance-payroll": "مسير الرواتب"
   },
   "pageTitles": {
     "dashboard": "لوحة التحكم",
@@ -464,7 +465,8 @@
     "hr-employees": "الموارد البشرية - الموظفين",
     "hr-attendance": "الموارد البشرية - الحضور",
     "hr-leave": "الموارد البشرية - الإجازات",
-    "hr-workload": "الموارد البشرية - أحمال العمل"
+    "hr-workload": "الموارد البشرية - أحمال العمل",
+    "finance-payroll": "مسير الرواتب"
   },
   "auto": {
     "quickLoginDemoMode": "تسجيل الدخول السريع (وضع العرض):",
@@ -1565,12 +1567,12 @@
     "calls": "مكالمات",
     "logCommunication": "تسجيل تواصل",
     "manageDesignPhasesAndEngineeringDrawings": "إدارة مراحل التصميم والرسومات الهندسية",
-    "concept": "المفهوم",
-    "preliminaryDesign": "تصميم أولي",
-    "designDevelopment": "تطوير التصميم",
+    "concept": "المخطط المبدئي",
+    "preliminaryDesign": "المخطط التخطيطي",
+    "designDevelopment": "التصميم التفصيلي",
     "notStarted": "لم يبدأ",
-    "constructionDocs": "مستندات التنفيذ",
-    "asBuilt": "كما بُني",
+    "constructionDocs": "المخططات التنفيذية",
+    "asBuilt": "كما نُفذ",
     "2ndFloorPlanUploaded": "تم رفع مخطط الطابق الثاني",
     "2HoursAgo": "منذ ساعتين",
     "facadePlanReviewRequested": "طلب مراجعة مخطط الواجهات",
