@@ -27,6 +27,8 @@ import {
   Droplets,
   FileCheck,
   Scale,
+  HandCoins,
+  Percent,
 } from "lucide-react";
 import type { DesignDiscipline } from "./types";
 
@@ -102,6 +104,7 @@ export const municipalitySubTabs = [
 export const boqSubTabs = [
   { id: "boq", icon: Calculator, labelAr: "جدول الكميات", labelEn: "BOQ" },
   { id: "specs", icon: FileText, labelAr: "المواصفات الفنية", labelEn: "Specifications" },
+  { id: "ratios", icon: Percent, labelAr: "النسب الرسمية", labelEn: "Official Ratios" },
 ];
 
 export const contractorSubTabs = [
@@ -119,6 +122,7 @@ export const supervisionSubTabs = [
 ];
 
 export const financialSubTabs = [
+  { id: "fees", icon: HandCoins, labelAr: "الأتعاب والتحصيل", labelEn: "Fees & Collections" },
   { id: "invoices", icon: Receipt, labelAr: "الفواتير", labelEn: "Invoices" },
   { id: "payments", icon: CreditCard, labelAr: "المدفوعات", labelEn: "Payments" },
   { id: "budgets", icon: PiggyBank, labelAr: "الميزانية", labelEn: "Budget" },

@@ -206,6 +206,9 @@ model User {
   approvedPayments        Payment[]                @relation("PaymentApprover")
   approvedLeaves          Leave[]                  @relation("LeaveApprover")
   approvedTimesheets      Timesheet[]              @relation("TimesheetApprover")
+  projectFees             ProjectFee[]             @relation("ProjectFeeCreator")
+  feeCollections          FeeCollection[]          @relation("FeeCollectionCreator")
+  ratioSheets             RatioSheet[]             @relation("RatioSheetCreator")
   uploadedDocuments       Document[]               @relation("DocumentUploader")
   projectComments         ProjectComment[]
   comments                TaskComment[]
@@ -378,6 +381,10 @@ model Project {
   slaBreaches                SLABreach[]
   aiChatConversations        AIChatConversation[]
   recurringInvoices          RecurringInvoice[]
+  projectFees                ProjectFee[]
+  feeCollections             FeeCollection[]
+  ratioSheet                 RatioSheet?
+  ratioItems                 ProjectRatio[]
 
   @@unique([number, organizationId])
   @@index([clientId])
@@ -2572,6 +2579,10 @@ model Organization {
   recurringInvoices          RecurringInvoice[]
   projectTemplates           ProjectTemplate[]
   reportTemplates            ReportTemplate[]
+  projectFees                ProjectFee[]
+  feeCollections             FeeCollection[]
+  ratioSheets                RatioSheet[]
+  ratioItems                 ProjectRatio[]
 
   @@index([deletedAt])
 }
@@ -3344,4 +3355,122 @@ model CRMActivity {
   @@index([opportunityId])
   @@index([status])
   @@index([dueDate])
+}
+
+// ==================== PROJECT FEES (الأتعاب حسب الاتفاق) ====================
+// Manually-managed fee lines agreed with the client (design fees, supervision
+// fees, reimbursable expenses, contractor share, ...). Amounts are entered per
+// the signed agreement — no fixed percentage is assumed by the system.
+
+model ProjectFee {
+  id             String    @id @default(cuid())
+  organizationId String // SaaS multi-tenant organization
+  projectId      String
+  title          String    @default("")
+  category       String    @default("DESIGN") // DESIGN, SUPERVISION, EXPENSES, CONTRACTOR_SHARE, OTHER
+  amount         Decimal   @default(0) // Agreed amount (AED)
+  notes          String    @default("")
+  createdById    String?
+  deletedAt      DateTime? // Soft delete
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  project      Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User?           @relation("ProjectFeeCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  collections  FeeCollection[]
+
+  @@index([projectId])
+  @@index([organizationId])
+  @@index([deletedAt])
+}
+
+// ==================== FEE COLLECTIONS (تحصيلات الأتعاب) ====================
+// Money actually received against project fees. The financing bank deducts a
+// retention percentage (e.g. 10% held as owner/maintenance guarantee) and a
+// tax percentage (e.g. 5%) from every payment — rates are stored per record
+// so historical vouchers never change when defaults evolve later.
+
+model FeeCollection {
+  id                  String    @id @default(cuid())
+  organizationId      String // SaaS multi-tenant organization
+  projectId           String
+  feeId               String? // Optional link to the fee being collected
+  voucherNumber       String    @default("") // e.g. "REC-0001"
+  grossAmount         Decimal   @default(0) // Amount before deductions
+  retentionRate       Decimal   @default(10) // Bank retention % (owner guarantee / maintenance)
+  retentionAmount     Decimal   @default(0) // grossAmount * retentionRate / 100
+  taxRate             Decimal   @default(5) // Tax withheld %
+  taxAmount           Decimal   @default(0) // grossAmount * taxRate / 100
+  netAmount           Decimal   @default(0) // grossAmount - retentionAmount - taxAmount
+  method              String    @default("transfer") // cash, cheque, transfer, online
+  referenceNumber     String    @default("")
+  status              String    @default("RECEIVED") // RECEIVED, PENDING
+  notes               String    @default("")
+  retentionReleasedAt DateTime? // When the bank released the held retention
+  createdById         String?
+  deletedAt           DateTime? // Soft delete
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fee          ProjectFee?  @relation(fields: [feeId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User?        @relation("FeeCollectionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([feeId])
+  @@index([organizationId])
+  @@index([deletedAt])
+}
+
+// ==================== OFFICIAL RATIOS SHEET (جدول النسب الرسمية) ====================
+// One sheet per project mirroring the financing-program official ratios form
+// (e.g. SZHP progress-payment sheet): sheet meta + per-work-item approved
+// percentages. contractValue is the computation base (defaults from Project).
+
+model RatioSheet {
+  id               String   @id @default(cuid())
+  organizationId   String // SaaS multi-tenant organization
+  projectId        String   @unique
+  programName      String   @default("") // e.g. financing program name
+  fileNumber       String   @default("") // e.g. "4372/26"
+  bankName         String   @default("") // Financing bank
+  contractValue    Decimal  @default(0) // Computation base (0 = use Project.budget)
+  maintenancePct   Decimal  @default(10) // Maintenance deduction per payment %
+  notes            String   @default("")
+  createdById      String?
+  deletedAt        DateTime? // Soft delete
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User?         @relation("RatioSheetCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+}
+
+// ==================== OFFICIAL RATIO ITEMS (بنود النسب الرسمية) ====================
+
+model ProjectRatio {
+  id             String    @id @default(cuid())
+  organizationId String // SaaS multi-tenant organization
+  projectId      String
+  order          Int       @default(0)
+  itemName       String    @default("")
+  itemNameEn     String    @default("")
+  officialPct    Decimal   @default(0) // Approved official percentage
+  executedPct    Decimal   @default(0) // Executed percentage so far
+  notes          String    @default("")
+  deletedAt      DateTime? // Soft delete
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([organizationId])
+  @@index([deletedAt])
 }
