@@ -26,6 +26,7 @@ import { SummaryCards } from "./invoices/summary-cards";
 import { InvoiceTable } from "./invoices/invoice-table";
 import { InvoicePrintDialog } from "./invoices/invoice-print-dialog";
 import { InvoiceFormDialog } from "./invoices/invoice-form-dialog";
+import { InvoiceRecordPaymentDialog } from "./invoices/invoice-record-payment-dialog";
 
 // ===== Main Component =====
 interface InvoicesPageProps {
@@ -43,6 +44,7 @@ export default function InvoicesPage({ language, projectId }: InvoicesPageProps)
   const [showDialog, setShowDialog] = useState(false);
   const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
   const [printInvoice, setPrintInvoice] = useState<Invoice | null>(null);
+  const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [optimisticDeletedIds, setOptimisticDeletedIds] = useState<Set<string>>(new Set());
@@ -57,11 +59,13 @@ export default function InvoicesPage({ language, projectId }: InvoicesPageProps)
   }, []);
 
   const emptyForm = {
-    number: "", clientId: "", projectId: projectId || "",
+    number: "",
+    clientId: "",
+    projectId: projectId || "",
     issueDate: new Date().toISOString().split("T")[0],
     dueDate: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
     status: "DRAFT" as string,
-    currency: "AED" as string,
+    currency: "AED",
     items: [getEmptyLineItem()],
   };
 
@@ -482,9 +486,25 @@ export default function InvoicesPage({ language, projectId }: InvoicesPageProps)
           onEdit={openEdit}
           onDelete={handleDelete}
           onRequestApproval={handleRequestApproval}
+          onRecordPayment={(inv) => setPaymentInvoice(inv)}
+          onCreateFirst={() => {
+            setFormData(emptyForm);
+            reset({
+              ...emptyForm,
+              status: "DRAFT",
+            });
+            setShowDialog(true);
+          }}
           PAGE_SIZE={PAGE_SIZE}
           selectedIds={selectedIds}
           setSelectedIds={setSelectedIds}
+        />
+
+        <InvoiceRecordPaymentDialog
+          ar={ar}
+          open={!!paymentInvoice}
+          invoice={paymentInvoice}
+          onClose={() => setPaymentInvoice(null)}
         />
 
         <InvoicePrintDialog

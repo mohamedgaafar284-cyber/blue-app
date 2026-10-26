@@ -467,7 +467,7 @@ export default function ClientFormDialog({ open, onOpenChange, editClient, onSav
                       <Label className="text-xs text-slate-500">{tAuto('auto.building')}</Label>
                       <Input
                         value={formAddress.building || ""}
-                        onChange={(e) => setFormAddress((p) => ({ ...p, BUILDING: e.target.value }))}
+                        onChange={(e) => setFormAddress((p) => ({ ...p, building: e.target.value }))}
                         placeholder={tAuto('auto.buildingNo')}
                       />
                     </div>

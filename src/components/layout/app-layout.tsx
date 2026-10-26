@@ -27,6 +27,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { CommandPalette, useCommandPalette } from "@/components/command-palette";
 import { GuidedTour } from "@/components/guided-tour";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -57,6 +58,7 @@ export default function AppLayout({ language, children }: AppLayoutProps) {
 
   const router = useRouter();
   const pathname = usePathname();
+  const { open: commandPaletteOpen, onOpenChange: setCommandPaletteOpen } = useCommandPalette();
 
   // Inject Next.js router instance to the Zustand navigation store
   useEffect(() => {
@@ -244,6 +246,9 @@ export default function AppLayout({ language, children }: AppLayoutProps) {
       <WelcomeNotification />
       <ShortcutsOverlay language={language} open={showShortcuts} onOpenChange={setShowShortcuts} />
       <MobileBottomNav language={language} />
+      
+      {/* 🚀 Universal Command Palette (Ctrl+K) */}
+      <CommandPalette open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} />
       
       {/* Guided Tour for Demo Mode */}
       <GuidedTour language={language} />
