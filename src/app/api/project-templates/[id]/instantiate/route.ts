@@ -95,12 +95,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         stagesCount++;
         await tx.projectStage.create({
           data: {
-            stageName: stage.name,
-            department: "architectural",
+            // Arabic-first stage name (office primary language), English fallback
+            stageName: stage.nameAr || stage.name,
+            department: "ARCHITECTURAL",
             stageOrder: stage.order || stagesCount,
             projectId: createdProject.id,
             status: "NOT_STARTED",
-            notes: stage.nameAr || "",
+            notes: "",
             ...orgCreate(user),
           },
         });

@@ -131,12 +131,14 @@ export const financialSubTabs = [
 ];
 
 // ===== DESIGN PIPELINE CONSTANTS =====
+// التسميات موحدة مع PHASE_CONFIG في design-management/types.ts
+// على مصطلحات مكاتب الاستشارات الهندسية في الإمارات
 export const DESIGN_PIPELINE_STAGES = [
-  { key: "CONCEPT", labelAr: "مبدئي", labelEn: "Concept" },
-  { key: "SCHEMATIC", labelAr: "تخطيطي", labelEn: "Schematic" },
-  { key: "DEVELOPMENT", labelAr: "تطوير", labelEn: "Development" },
-  { key: "CONSTRUCTION_DOCS", labelAr: "مخططات تنفيذية", labelEn: "Construction Docs" },
-  { key: "AS_BUILT", labelAr: "أس-بيلت", labelEn: "As-Built" },
+  { key: "CONCEPT", labelAr: "المخطط المبدئي", labelEn: "Concept" },
+  { key: "SCHEMATIC", labelAr: "المخطط التخطيطي", labelEn: "Schematic" },
+  { key: "DEVELOPMENT", labelAr: "التصميم التفصيلي", labelEn: "Design Development" },
+  { key: "CONSTRUCTION_DOCS", labelAr: "المخططات التنفيذية", labelEn: "Construction Docs" },
+  { key: "AS_BUILT", labelAr: "كما نُفذ", labelEn: "As-Built" },
 ];
 
 export const DESIGN_DISCIPLINES: DesignDiscipline[] = [
