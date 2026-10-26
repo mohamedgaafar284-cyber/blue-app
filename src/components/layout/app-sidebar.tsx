@@ -30,7 +30,7 @@ import {
   AlertTriangle, Shield, PenTool, Gavel, SearchCheck, ClipboardCheck, Gift,
   UserPlus, BookOpen, Plus, CheckCircle2, TrendingUp, TrendingDown, Wallet, Wind,
   Headphones, Calendar, BookMarked, Search, Bell, User, Settings,
-  FolderTree, FileSpreadsheet, FileText, Target,
+  FolderTree, FileSpreadsheet, FileText, Target, Receipt, CreditCard,
   ExternalLink, Globe, Video,
   type LucideIcon
 } from "lucide-react";
@@ -79,6 +79,8 @@ const iconMap: Record<string, LucideIcon> = {
   FileSpreadsheet,
   FileText,
   Target,
+  Receipt,
+  CreditCard,
   Video,
 };
 
@@ -132,7 +134,7 @@ function SidebarQuickStats() {
 const MAIN_NAV_IDS = ["dashboard", "field-portal", "clients", "projects", "contractors", "documents"];
 const BUSINESS_NAV_IDS = ["finance", "reports", "employees"];
 const TOOLS_NAV_IDS = ["help", "features-hub"];
-const SYSTEM_NAV_IDS = ["admin"];
+const SYSTEM_NAV_IDS = ["api-docs", "admin"];
 
 function groupNavItems(items: NavItem[]) {
   return {

@@ -70,17 +70,20 @@ export const DESIGN_STEP_STATUS_COLORS: Record<string, string> = {
 };
 
 // ===== TAB CONFIGURATION =====
+// الترتيب يتبع سير عمل المكتب الفعلي:
+// نظرة عامة → التصميم (معماري/إنشائي/ميب) → البلدية → المقاييس والمواصفات (التندر)
+// → تعيين المقاول → الإشراف → المالية → المستندات — ثم الأدوات المساندة (مهام/سير عمل)
 export const mainTabs = [
   { id: "overview", icon: Eye, labelAr: "نظرة عامة", labelEn: "Overview" },
-  { id: "workflow", icon: GitBranch, labelAr: "سير العمل", labelEn: "Workflow" },
   { id: "design", icon: PenTool, labelAr: "مرحلة التصميم", labelEn: "Design Stage" },
   { id: "municipality", icon: Landmark, labelAr: "البلدية", labelEn: "Municipality" },
   { id: "boq", icon: Calculator, labelAr: "مقاييس ومواصفات", labelEn: "BOQ & Specs" },
   { id: "contractor", icon: HardHat, labelAr: "تعيين مقاول", labelEn: "Contractor Assignment" },
   { id: "supervision", icon: ClipboardCheck, labelAr: "الإشراف", labelEn: "Supervision" },
-  { id: "tasks", icon: CheckSquare, labelAr: "المهام", labelEn: "Tasks" },
   { id: "financial", icon: Wallet, labelAr: "المالية", labelEn: "Financial" },
   { id: "documents", icon: FileText, labelAr: "المستندات", labelEn: "Documents" },
+  { id: "tasks", icon: CheckSquare, labelAr: "المهام", labelEn: "Tasks" },
+  { id: "workflow", icon: GitBranch, labelAr: "سير العمل", labelEn: "Workflow" },
 ];
 
 export const designSubTabs = [

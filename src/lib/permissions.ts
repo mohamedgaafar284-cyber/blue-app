@@ -141,14 +141,14 @@ const allNavItems: NavItem[] = [
     children: [
       {
         id: "invoices",
-        icon: "FileText",
+        icon: "Receipt",
         labelAr: "الفواتير",
         labelEn: "Invoices",
         roles: ["ADMIN", "MANAGER", "ACCOUNTANT"],
       },
       {
         id: "payments",
-        icon: "Wallet",
+        icon: "CreditCard",
         labelAr: "المدفوعات",
         labelEn: "Payments",
         roles: ["ADMIN", "MANAGER", "ACCOUNTANT"],
@@ -283,6 +283,16 @@ const allNavItems: NavItem[] = [
     labelAr: "المميزات المتقدمة",
     labelEn: "Advanced Features",
     roles: ["ADMIN", "MANAGER"],
+  },
+
+  // ───── API Docs (أداة مطورين — للإدارة فقط) ─────
+  {
+    id: "api-docs",
+    icon: "BookOpen",
+    labelAr: "توثيق API",
+    labelEn: "API Docs",
+    roles: ["ADMIN"],
+    href: "/docs",
   },
 
   // ───── 7. System Admin (admin بس) ─────
