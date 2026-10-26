@@ -19,6 +19,7 @@ import {
   Receipt,
   Scale,
   RefreshCw,
+  Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,6 +49,14 @@ const FinanceExpensesPage = dynamic(
 
 const FinanceReportsPage = dynamic(
   () => import("@/components/pages/finance-reports"),
+  {
+    loading: () => <TabLoadingSkeleton />,
+    ssr: false,
+  }
+);
+
+const FinancePayrollPage = dynamic(
+  () => import("@/components/pages/finance-payroll"),
   {
     loading: () => <TabLoadingSkeleton />,
     ssr: false,
@@ -399,6 +408,14 @@ export default function FinanceHub({
             </TabsTrigger>
 
             <TabsTrigger
+              value="payroll"
+              className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm flex items-center gap-2"
+            >
+              <Banknote className="h-4 w-4 text-emerald-600" />
+              <span>{ar ? "مسير الرواتب" : "Payroll"}</span>
+            </TabsTrigger>
+
+            <TabsTrigger
               value="advanced"
               className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm flex items-center gap-2"
             >
@@ -436,7 +453,14 @@ export default function FinanceHub({
           </div>
         )}
 
-        {/* Tab 5: Advanced Accounting & Tools Hub */}
+        {/* Tab 5: Monthly Payroll (Keep-Alive mounted) */}
+        {mountedTabs.has("payroll") && (
+          <div className={activeTab === "payroll" ? "block" : "hidden"}>
+            <FinancePayrollPage />
+          </div>
+        )}
+
+        {/* Tab 6: Advanced Accounting & Tools Hub */}
         {mountedTabs.has("advanced") && (
           <div className={activeTab === "advanced" ? "block" : "hidden"}>
             <div className="space-y-4 pt-2">
@@ -581,6 +605,28 @@ export default function FinanceHub({
                         {ar
                           ? "شهادات الدفع المرحلية للمشاريع الهندسية ونسب الإنجاز"
                           : "Interim payment certificates and milestone claim approvals"}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* 7. Payroll Direct Link */}
+                <Link
+                  href="/dashboard/finance/payroll"
+                  className="group p-5 rounded-xl border border-border/70 bg-card hover:border-primary/50 hover:shadow-md transition-all block"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                      <Banknote className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {ar ? "مسير الرواتب المستقل" : "Standalone Payroll Portal"}
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {ar
+                          ? "إدارة مسيرات الرواتب الشهرية والترحيل المحاسبي لرواتب الموظفين"
+                          : "Monthly payroll processing, allowances, deductions and GL posting"}
                       </p>
                     </div>
                   </div>
