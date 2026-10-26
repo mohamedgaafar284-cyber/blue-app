@@ -408,6 +408,12 @@
     },
     "hr-workload": {
       "label": "HR - Workload"
+    },
+    "invoices": {
+      "label": "Invoices"
+    },
+    "payments": {
+      "label": "Payments"
     }
   },
   "pageTitles": {

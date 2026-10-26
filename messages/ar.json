@@ -408,6 +408,12 @@
     },
     "hr-workload": {
       "label": "الموارد البشرية - أحمال العمل"
+    },
+    "invoices": {
+      "label": "الفواتير"
+    },
+    "payments": {
+      "label": "المدفوعات"
     }
   },
   "pageTitles": {
