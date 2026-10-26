@@ -50,17 +50,10 @@ function AppHeader() {
     window.location.href = "/";
   };
 
-  // Keyboard shortcut for search (Ctrl+K)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        setCurrentPage("search");
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setCurrentPage]);
+  // Trigger Command Palette via custom event or helper
+  const triggerCommandPalette = () => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
+  };
 
   return (
     <header className="relative sticky top-[var(--demo-banner-height,0px)] z-30 flex h-14 items-center gap-3 border-b border-slate-200/60 dark:border-slate-700/40 bg-gradient-to-r from-white/90 via-white/85 to-brand-navy-50/80 dark:from-slate-900/90 dark:via-slate-900/85 dark:to-brand-navy-950/80 backdrop-blur-xl shadow-sm shadow-slate-200/30 dark:shadow-slate-900/30 px-4 lg:px-6">
@@ -78,43 +71,18 @@ function AppHeader() {
       {/* Action Buttons */}
       <div className="flex items-center gap-1">
         {/* Search Bar - Desktop */}
-        <div id="tour-header-search" className={cn(
-          "hidden md:flex items-center relative rounded-lg border overflow-hidden transition-all duration-300 ease-out",
-          searchFocused
-            ? "w-72 border-brand-navy-400/50 bg-white dark:bg-slate-800 search-bar-glow"
-            : "w-48 border-slate-200/80 dark:border-slate-700/50 bg-slate-50/80 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-600"
-        )}>
-          <Search className={cn(
-            "absolute start-3 h-3.5 w-3.5 pointer-events-none transition-colors duration-200",
-            searchFocused ? "text-brand-navy-500" : "text-slate-400"
-          )} />
-          <input
-            type="text"
-            placeholder={t("search")}
-            className={cn(
-              "h-9 w-full bg-transparent ps-9 pe-16 text-xs text-slate-900 dark:text-white",
-              "placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none",
-              "transition-all duration-200"
-            )}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setCurrentPage("search");
-                (e.target as HTMLInputElement).blur();
-                setSearchFocused(false);
-              }
-            }}
-          />
-          <kbd className={cn(
-            "absolute end-2 pointer-events-none inline-flex h-5 items-center rounded border px-1.5 font-mono text-[10px] font-medium transition-all duration-200",
-            searchFocused
-              ? "border-brand-navy-300 dark:border-brand-navy-700 bg-brand-navy-50 dark:bg-brand-navy-900/30 text-brand-navy-600 dark:text-brand-navy-400 opacity-0"
-              : "border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
-          )}>
-            ⌘K
+                <button
+          id="tour-header-search"
+          onClick={triggerCommandPalette}
+          type="button"
+          className="hidden md:flex items-center relative rounded-lg border w-56 border-slate-200/80 dark:border-slate-700/50 bg-slate-50/80 dark:bg-slate-800/40 hover:border-brand-navy-400/50 hover:bg-white dark:hover:bg-slate-800 px-3 h-9 text-xs text-slate-400 transition-all cursor-pointer"
+        >
+          <Search className="h-3.5 w-3.5 me-2 text-slate-400" />
+          <span className="flex-1 text-start">{t("search")}</span>
+          <kbd className="pointer-events-none inline-flex h-5 items-center rounded border px-1.5 font-mono text-[10px] font-medium border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500">
+            Ctrl+K
           </kbd>
-        </div>
+        </button>
 
         {/* Search Button - Mobile */}
         <TooltipProvider delayDuration={0}>
@@ -124,7 +92,7 @@ function AppHeader() {
                 variant="ghost"
                 size="icon"
                 className="md:hidden h-9 w-9 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/60 transition-all duration-200"
-                onClick={() => setCurrentPage("search")}
+                onClick={triggerCommandPalette}
                 aria-label={tAuto('auto.search')}
               >
                 <Search className="h-4 w-4" />

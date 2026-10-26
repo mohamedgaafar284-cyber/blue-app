@@ -112,8 +112,12 @@ export function InvoiceFormDialog({
           {/* Top row */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">{tAuto('auto.invoiceNo')} *</Label>
-              <Input {...register("number")} placeholder="INV-001" className="h-8 text-sm rounded-lg" />
+              <Label className="text-xs">{tAuto('auto.invoiceNo')}</Label>
+              <Input
+                {...register("number")}
+                placeholder={ar ? "تلقائي (مثل: INV-2026-001)" : "Auto-generated"}
+                className="h-8 text-sm rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+              />
               {errors.number && <p className="text-red-500 text-xs mt-1">{getErrorMessage(errors.number.message || "", ar)}</p>}
             </div>
             <div className="space-y-1">
@@ -156,7 +160,10 @@ export function InvoiceFormDialog({
                   <SelectItem value="DRAFT">{tAuto('auto.draft')}</SelectItem>
                   <SelectItem value="SENT">{tAuto('auto.sent')}</SelectItem>
                   <SelectItem value="PARTIALLY_PAID">{tAuto('auto.partiallyPaid')}</SelectItem>
-                  <SelectItem value="PAID">{tAuto('auto.paid')}</SelectItem>
+                  {/* Note: Invoices cannot be manually changed to PAID to preserve GL integrity. Use "تسجيل دفعة" instead */}
+                  {editInvoice?.status === "PAID" && (
+                    <SelectItem value="PAID">{tAuto('auto.paid')}</SelectItem>
+                  )}
                   <SelectItem value="CANCELLED">{tAuto('auto.cancelled')}</SelectItem>
                 </SelectContent>
               </Select>

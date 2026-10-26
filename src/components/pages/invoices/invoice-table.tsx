@@ -4,7 +4,7 @@
 import { useTranslations } from 'next-intl';
 import { TableVirtuoso } from "react-virtuoso";
 import { forwardRef, type ComponentPropsWithoutRef } from "react";
-import { Receipt, Pencil, Trash2, Printer, FileText, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Receipt, Pencil, Trash2, Printer, FileText, CheckCircle2, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -40,6 +40,8 @@ interface InvoiceTableProps {
   onEdit: (inv: Invoice) => void;
   onDelete: (id: string) => void;
   onRequestApproval: (inv: Invoice) => void;
+  onRecordPayment?: (inv: Invoice) => void;
+  onCreateFirst?: () => void;
 
   PAGE_SIZE: number;
   selectedIds: Set<string>;
@@ -67,6 +69,8 @@ export function InvoiceTable({
   onEdit,
   onDelete,
   onRequestApproval,
+  onRecordPayment,
+  onCreateFirst,
 
   PAGE_SIZE,
   selectedIds,
@@ -91,8 +95,22 @@ export function InvoiceTable({
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 overflow-hidden shadow-sm relative">
       {filtered.length === 0 ? (
-         <div className="text-center py-12 text-slate-400">
-           {tAuto('auto.noInvoicesFound')}
+         <div className="text-center py-12 px-4 space-y-3">
+           <div className="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
+             <Receipt className="h-6 w-6" />
+           </div>
+           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+             {tAuto('auto.noInvoicesFound')}
+           </p>
+           {onCreateFirst && (
+             <Button
+               size="sm"
+               onClick={onCreateFirst}
+               className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
+             >
+               {ar ? "+ إنشاء أول فاتورة الآن" : "+ Create First Invoice"}
+             </Button>
+           )}
          </div>
       ) : (
       <TableVirtuoso
@@ -150,6 +168,25 @@ export function InvoiceTable({
                   </TableCell>
                   <TableCell className="text-end">
                     <div className="flex items-center gap-0.5 justify-end">
+                      {/* Quick Record Payment for invoices not fully paid */}
+                      {onRecordPayment && inv.status !== "PAID" && inv.status !== "CANCELLED" && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                              onClick={() => onRecordPayment(inv)}
+                              aria-label={ar ? "تسجيل دفعة" : "Record Payment"}
+                            >
+                              <CreditCard className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">
+                            {ar ? "تسجيل وسداد دفعة" : "Record Payment"}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:text-slate-700 dark:text-slate-400" onClick={() => onPrint(inv)} aria-label="Print"><Printer className="h-3.5 w-3.5" /></Button>

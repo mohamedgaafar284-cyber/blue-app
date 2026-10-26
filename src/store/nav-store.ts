@@ -33,6 +33,7 @@ const PAGE_ROUTE_MAP: Record<string, string> = {
   "projects-viewer": "/dashboard/projects",
   contractors: "/dashboard/contractors",
   employees: "/dashboard/employees",
+  finance: "/dashboard/finance",
   "finance-revenue": "/dashboard/finance/revenue",
   "finance-expenses": "/dashboard/finance/expenses",
   "finance-payroll": "/dashboard/finance/payroll",
