@@ -31,6 +31,7 @@ import {
   UserPlus, BookOpen, Plus, CheckCircle2, TrendingUp, TrendingDown, Wallet, Wind,
   Headphones, Calendar, BookMarked, Search, Bell, User, Settings,
   FolderTree, FileSpreadsheet, FileText, Target, Receipt, CreditCard,
+  Banknote,
   ExternalLink, Globe, Video,
   type LucideIcon
 } from "lucide-react";
@@ -71,6 +72,7 @@ const iconMap: Record<string, LucideIcon> = {
   TrendingUp,
   TrendingDown,
   Wallet,
+  Banknote,
   Wind,
   Headphones,
   Calendar,

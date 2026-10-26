@@ -414,7 +414,8 @@
     },
     "payments": {
       "label": "Payments"
-    }
+    },
+    "finance-payroll": "Payroll"
   },
   "pageTitles": {
     "dashboard": "Dashboard",
@@ -464,7 +465,8 @@
     "hr-employees": "HR - Employees",
     "hr-attendance": "HR - Attendance",
     "hr-leave": "HR - Leave",
-    "hr-workload": "HR - Workload"
+    "hr-workload": "HR - Workload",
+    "finance-payroll": "Payroll"
   },
   "auto": {
     "quickLoginDemoMode": "Quick Login (Demo Mode):",

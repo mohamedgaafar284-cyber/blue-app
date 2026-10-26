@@ -18,9 +18,11 @@ import {
   List,
   Receipt,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { QuickEntryModal } from "@/components/pages/finance/quick-entry-modal";
 
 interface QuickActionsProps {
   language: "ar" | "en";
@@ -35,6 +37,13 @@ interface QuickAction {
 }
 
 const actions: QuickAction[] = [
+  {
+    id: "quick-money",
+    labelAr: "سجّل حركة مالية",
+    labelEn: "Quick Money Entry",
+    page: "__money__", // special: opens the QuickEntryModal instead of navigating
+    icon: Wallet,
+  },
   {
     id: "project",
     labelAr: "مشروع جديد",
@@ -69,9 +78,15 @@ export default function QuickActions({ language }: QuickActionsProps) {
   const tAuto = useTranslations();
   const isAr = language === "ar";
   const [open, setOpen] = useState(false);
+  const [moneyOpen, setMoneyOpen] = useState(false);
   const { setCurrentPage } = useNavStore();
 
   const handleAction = (page: string) => {
+    if (page === "__money__") {
+      setMoneyOpen(true);
+      setOpen(false);
+      return;
+    }
     setCurrentPage(page);
     setOpen(false);
   };
@@ -145,6 +160,9 @@ export default function QuickActions({ language }: QuickActionsProps) {
           </AnimatePresence>
         </PopoverContent>
       </Popover>
+
+      {/* ⚡ Quick money entry — fixed server-resolved ledger posting */}
+      <QuickEntryModal language={language} open={moneyOpen} onOpenChange={setMoneyOpen} />
     </div>
   );
 }

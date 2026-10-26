@@ -35,6 +35,7 @@ const PAGE_ROUTE_MAP: Record<string, string> = {
   employees: "/dashboard/employees",
   "finance-revenue": "/dashboard/finance/revenue",
   "finance-expenses": "/dashboard/finance/expenses",
+  "finance-payroll": "/dashboard/finance/payroll",
   "finance-reports": "/dashboard/finance/reports",
   "finance-retainage": "/dashboard/finance/retainage",
   "finance-guarantees": "/dashboard/finance/guarantees",
